@@ -1,0 +1,20 @@
+[Unit]
+Description=Price Monitor UI
+After=network-online.target price-monitor-api.service
+Wants=network-online.target
+Requires=price-monitor-api.service
+
+[Service]
+Type=simple
+User=price-monitor
+Group=price-monitor
+WorkingDirectory=/opt/price-monitor
+Environment=HOME=/opt/price-monitor
+EnvironmentFile=/opt/price-monitor/deploy/server/server.env
+ExecStart=/bin/bash /opt/price-monitor/deploy/server/start_ui.sh
+Restart=always
+RestartSec=5
+TimeoutStopSec=20
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,781 @@
+%PDF-1.4
+%‚„œ”
+1 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+2 0 obj
+<< /Length 3736 >>
+stream
+BT
+/F1 11 Tf
+1 0 0 1 42 794 Tm
+15 TL
+(Documentacao Completa do Sistema - Agente de Precos @page { size: A4; margin: 20mm 14mm 18mm) Tj
+T*
+(14mm; } body { margin: 0; color: #16202a; font-family: "Segoe UI", Arial, sans-serif; font-size:) Tj
+T*
+(11.5pt; line-height: 1.45; } h1, h2, h3, h4 { margin: 0 0 10px; line-height: 1.2; } h1 { font-) Tj
+T*
+(size: 24pt; } h2 { margin-top: 28px; padding-bottom: 6px; font-size: 16pt; border-bottom: 1px) Tj
+T*
+(solid #d7dee5; } h3 { margin-top: 18px; font-size: 13pt; color: #1c6dd0; } h4 { margin-top:) Tj
+T*
+(14px; font-size: 11.5pt; } p { margin: 0 0 10px; } ul, ol { margin: 8px 0 12px 22px; padding: 0;) Tj
+T*
+(} li { margin: 4px 0; } code { padding: 1px 4px; font-family: Consolas, "Courier New",) Tj
+T*
+(monospace; font-size: 10pt; background: #f7f9fc; border-radius: 4px; } pre { margin: 10px 0) Tj
+T*
+(14px; padding: 12px; white-space: pre-wrap; word-break: break-word; font-family: Consolas,) Tj
+T*
+("Courier New", monospace; font-size: 9.5pt; line-height: 1.45; background: #f7f9fc; border: 1px) Tj
+T*
+(solid #d7dee5; border-radius: 8px; } table { width: 100%; margin: 10px 0 16px; border-collapse:) Tj
+T*
+(collapse; font-size: 10.5pt; } th, td { padding: 8px 10px; vertical-align: top; text-align:) Tj
+T*
+(left; border: 1px solid #d7dee5; } th { background: #eaf2fd; } .cover { min-height: 240mm;) Tj
+T*
+(display: flex; flex-direction: column; justify-content: center; gap: 16px; } .cover-card {) Tj
+T*
+(padding: 22px 24px; background: linear-gradient\(135deg, #f2f7ff, #ffffff\); border: 1px solid) Tj
+T*
+(#d7dee5; border-radius: 16px; } .meta { color: #52606d; font-size: 10.5pt; } .note { margin:) Tj
+T*
+(12px 0 16px; padding: 12px 14px; background: #fff7e8; border-left: 4px solid #d97706; border-) Tj
+T*
+(radius: 8px; } .ok { margin: 12px 0 16px; padding: 12px 14px; background: #ecfdf3; border-left:) Tj
+T*
+(4px solid #16a34a; border-radius: 8px; } .grid-2 { display: grid; grid-template-columns: 1fr) Tj
+T*
+(1fr; gap: 12px; } .card { padding: 12px 14px; background: #fff; border: 1px solid #d7dee5;) Tj
+T*
+(border-radius: 10px; } .page-break { page-break-before: always; } Documentacao Completa do) Tj
+T*
+(Sistema) Tj
+T*
+(Projeto: Agente de Precos / Price Monitor Pro) Tj
+T*
+(Objetivo do documento: registrar de forma minuciosa a arquitetura, as funcionalidades) Tj
+T*
+(implementadas, a operacao, os fluxos de negocio, os arquivos-chave e as orientacoes de) Tj
+T*
+(manutencao futura do sistema.) Tj
+T*
+(Versao consolidada em 18/03/2026, baseada no codigo-fonte presente na raiz do projeto, na) Tj
+T*
+(documentacao existente e nas configuracoes operacionais observadas no ambiente.) Tj
+T*
+() Tj
+T*
+(Resumo executivo) Tj
+T*
+(O sistema processa planilhas de produtos, identifica o canal de cada item, coleta precos por) Tj
+T*
+(automacao ou HTTP, grava os resultados em planilha, disponibiliza painel web, shell Streamlit e) Tj
+T*
+(interface de terminal, alem de permitir agendamento, envio de e-mail, WhatsApp e Google Drive.) Tj
+T*
+() Tj
+T*
+(Fontes usadas nesta consolidacao) Tj
+T*
+() Tj
+T*
+(? README.md) Tj
+T*
+(? DOCUMENTACAO_COMPLETA.md) Tj
+T*
+(? App/main.py) Tj
+T*
+(? ui/server.py) Tj
+T*
+(? ui_streamlit/app.py) Tj
+T*
+(? run.ps1, install.py e install.ps1) Tj
+T*
+() Tj
+T*
+(1. Visao Geral do Sistema) Tj
+T*
+(O Agente de Precos e um sistema de automacao operacional focado em leitura de planilhas, coleta) Tj
+T*
+(de precos em marketplaces e geracao de saida estruturada. A aplicacao foi expandida para) Tj
+T*
+(funcionar em mais de uma forma de uso: via linha de comando, via API HTTP, via painel) Tj
+T*
+(HTML/JavaScript e via shell Streamlit com camada de autenticacao.) Tj
+T*
+(Na pratica, o projeto deixou de ser apenas um coletor executado por script e passou a ser uma) Tj
+T*
+ET
+endstream
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 1 0 R >> >> /Contents 2 0 R >>
+endobj
+4 0 obj
+<< /Length 3207 >>
+stream
+BT
+/F1 11 Tf
+1 0 0 1 42 794 Tm
+15 TL
+(plataforma local de operacao de pesquisas de preco, com fila de jobs, persistencia de estado,) Tj
+T*
+(acompanhamento em tempo real e distribuicao automatica de resultados.) Tj
+T*
+(1.1 Objetivos atendidos pelo sistema) Tj
+T*
+() Tj
+T*
+(? Receber uma planilha de entrada padronizada.) Tj
+T*
+(? Identificar, por link ou canal, qual coletor deve ser utilizado.) Tj
+T*
+(? Executar scraping/coleta e gerar uma planilha de saida estruturada.) Tj
+T*
+(? Disponibilizar operacao por interface web e por console local.) Tj
+T*
+(? Suportar execucao manual e automatica por agenda diaria.) Tj
+T*
+(? Enviar resultados por e-mail, WhatsApp e Google Drive.) Tj
+T*
+(? Permitir autenticacao de usuarios para acesso ao painel.) Tj
+T*
+() Tj
+T*
+(1.2 Componentes principais) Tj
+T*
+(ComponenteArquivo principalPapel) Tj
+T*
+(Coletor principalApp/main.pyLe leitura da planilha, roteamento por canal e geracao do output.) Tj
+T*
+(Backend HTTPui/server.pyAPI FastAPI, fila de jobs, scheduler, envios e autenticacao.) Tj
+T*
+(Painel webui/templates/* e ui/static/*UX operacional do sistema.) Tj
+T*
+(Shell Streamlitui_streamlit/app.pyCasca autenticada que incorpora o painel principal.) Tj
+T*
+(Cliente localtools/local_console.pyOperacao sem navegador.) Tj
+T*
+(Instalacaoinstall.py e install.ps1Provisionamento do ambiente.) Tj
+T*
+() Tj
+T*
+(2. O Que Foi Feito no Sistema) Tj
+T*
+() Tj
+T*
+(? Introducao de uma API FastAPI para gerenciar jobs, status, downloads e configuracoes em) Tj
+T*
+(  runtime.) Tj
+T*
+(? Criacao de um painel web em HTML/CSS/JS com atualizacao em tempo real por SSE e fallback de) Tj
+T*
+(  polling.) Tj
+T*
+(? Criacao de um shell Streamlit para operacao simplificada e autenticada.) Tj
+T*
+(? Criacao de um cliente reutilizavel para operar a API local ou remota a partir do terminal.) Tj
+T*
+(? Implementacao de agendamento diario multiplo com janelas de disparo configuraveis.) Tj
+T*
+(? Implementacao de envio automatico e manual de planilhas por e-mail.) Tj
+T*
+(? Implementacao de envio por WhatsApp via Twilio.) Tj
+T*
+(? Implementacao de upload automatico ou manual para Google Drive.) Tj
+T*
+(? Implementacao de autenticacao de usuarios com CRUD administrativo.) Tj
+T*
+(? Separacao de modos de execucao: web, local e hibrido.) Tj
+T*
+(? Preparacao de deploy em Linux com systemd, Nginx e variaveis de ambiente dedicadas.) Tj
+T*
+(? Melhorias recentes no instalador para detectar e recriar venv quebrado.) Tj
+T*
+() Tj
+T*
+(Observacao importante: os instaladores foram corrigidos para nao reportarem sucesso falso quando) Tj
+T*
+(o ambiente virtual estivesse apontando para um Python removido. Hoje eles detectam ambiente) Tj
+T*
+(quebrado, movem o venv invalido para backup e recriam o ambiente.) Tj
+T*
+(3. Estrutura de Pastas e Responsabilidades) Tj
+T*
+(Pasta / arquivoFuncao no sistema) Tj
+T*
+(App/Nucleo do scraping, configuracao e coletores.) Tj
+T*
+(App/collectors/Implementacoes por canal e modulo especializado.) Tj
+T*
+(App/utils/Helpers de navegador, VTEX, formatacao e APIs auxiliares.) Tj
+T*
+(ui/Backend FastAPI e frontend HTML embutido.) Tj
+T*
+(ui_streamlit/Shell Streamlit que encapsula a aplicacao principal.) Tj
+T*
+(tools/Cliente Python reutilizavel e console local.) Tj
+T*
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 1 0 R >> >> /Contents 4 0 R >>
+endobj
+6 0 obj
+<< /Length 2767 >>
+stream
+BT
+/F1 11 Tf
+1 0 0 1 42 794 Tm
+15 TL
+(deploy/server/Artefatos para deploy Linux com systemd e Nginx.) Tj
+T*
+(runs/Estado persistente de runtime: token, jobs, usuarios e configuracoes salvas.) Tj
+T*
+() Tj
+T*
+(4. Nucleo de Coleta: App/main.py) Tj
+T*
+(O arquivo App/main.py continua sendo o centro do processamento bruto de planilhas. Ele e) Tj
+T*
+(responsavel por abrir o arquivo de entrada, encontrar as colunas relevantes, decidir qual) Tj
+T*
+(coletor sera usado e gravar o arquivo final.) Tj
+T*
+(4.1 Responsabilidades principais) Tj
+T*
+() Tj
+T*
+(? Ler input.xlsx ou outro caminho recebido por argumento/variavel.) Tj
+T*
+(? Normalizar nomes de colunas para tolerar variacoes de acentuacao e rotulos.) Tj
+T*
+(? Extrair URL visivel ou hyperlink real da celula.) Tj
+T*
+(? Resolver qual coletor sera usado para cada linha.) Tj
+T*
+(? Padronizar os campos A prazo, A vista e Parcelamento.) Tj
+T*
+(? Gerar a aba Output e a aba Consolidado.) Tj
+T*
+(? Aplicar filtros por quantidade de linhas ou IDs especificos.) Tj
+T*
+() Tj
+T*
+(4.2 Coletores reconhecidos) Tj
+T*
+(CanalEstrategia principal) Tj
+T*
+(MagaluPlaywright e suporte a API oficial.) Tj
+T*
+(WebcontinentalFluxo HTTP/VTEX.) Tj
+T*
+(ZemaSelenium.) Tj
+T*
+(MadeiraMadeiraSelenium.) Tj
+T*
+(ProbelSelenium.) Tj
+T*
+(Mercado LivreCodigo ainda presente, mas documentado como desativado para o projeto principal) Tj
+T*
+(atual.) Tj
+T*
+() Tj
+T*
+(5. Configuracao Central via App/config.py) Tj
+T*
+(As classes ScraperSettings e ServerSettings organizam a configuracao do sistema e leem) Tj
+T*
+(automaticamente o arquivo .env. Isso centraliza defaults, validacoes e limites operacionais.) Tj
+T*
+() Tj
+T*
+(? enable_parallel_scraping, max_workers, max_selenium_sessions) Tj
+T*
+(? selenium_driver_max_tasks, selenium_page_load_timeout e retries de abertura) Tj
+T*
+(? daily_auto_enabled, daily_run_times, api_token e max_active_jobs) Tj
+T*
+(? blocos completos para SMTP/Gmail, Twilio/WhatsApp, Google Drive e intervalo de eventos da UI) Tj
+T*
+() Tj
+T*
+(Beneficio pratico: toda a configuracao sensivel fica fora do codigo e pode ser adaptada entre) Tj
+T*
+(ambiente local, servidor Linux e futuros modos de publicacao.) Tj
+T*
+(6. Backend HTTP: ui/server.py) Tj
+T*
+(Este arquivo concentrou a maior parte da evolucao do sistema. Ele deixou de ser apenas um) Tj
+T*
+(adaptador e se tornou o backend orquestrador do produto.) Tj
+T*
+(6.1 Responsabilidades principais) Tj
+T*
+() Tj
+T*
+(? Expor o status de saude da aplicacao.) Tj
+T*
+(? Manter fila de jobs e execucao serializada/limitada.) Tj
+T*
+(? Gerenciar scheduler diario.) Tj
+T*
+(? Persistir configuracoes de email, WhatsApp, Google Drive e agendamento.) Tj
+T*
+(? Persistir usuarios administrativos e sessoes autenticadas.) Tj
+T*
+(? Disponibilizar snapshots do estado via /api/events.) Tj
+T*
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 1 0 R >> >> /Contents 6 0 R >>
+endobj
+8 0 obj
+<< /Length 2782 >>
+stream
+BT
+/F1 11 Tf
+1 0 0 1 42 794 Tm
+15 TL
+(? Entregar HTML do painel principal e arquivos de output.) Tj
+T*
+() Tj
+T*
+(6.2 Estruturas centrais) Tj
+T*
+() Tj
+T*
+(? Job: dataclass que guarda trigger, status, tempos, caminhos de input/output e status de) Tj
+T*
+(  entregas.) Tj
+T*
+(? jobs: dicionario em memoria com o historico recente de execucoes.) Tj
+T*
+(? job_queue: fila de jobs aguardando processamento.) Tj
+T*
+(? latest_manual_job_id e latest_daily_job_id: referencias para a ultima execucao de cada tipo.) Tj
+T*
+(? arquivos persistentes em runs/ para token, usuarios e configuracoes.) Tj
+T*
+() Tj
+T*
+(6.3 Endpoints implementados) Tj
+T*
+(GrupoEndpoints) Tj
+T*
+(Saude e overview/api/health, /api/overview, /api/functions/check) Tj
+T*
+(Execucao/run, /api/run, /api/jobs/stop, /api/status/{job_id}) Tj
+T*
+(Ultimos resultados/api/manual/latest, /api/daily/latest, /api/output/latest) Tj
+T*
+(Email/api/email/settings, /api/email/{job_id}/send, /api/email/send/latest) Tj
+T*
+(WhatsApp/api/whatsapp/settings, /api/whatsapp/{job_id}/send, /api/whatsapp/send/latest) Tj
+T*
+(Google Drive/api/drive/settings, /api/drive/{job_id}/upload, /api/drive/upload/latest) Tj
+T*
+(Agenda e eventos/api/daily/settings, /api/events) Tj
+T*
+(Credenciais de marketplace/api/marketplace/credentials, /api/marketplace/credentials/magalu) Tj
+T*
+(Usuarios administrativos/api/admin/users/authenticate, /api/admin/users/logout,) Tj
+T*
+(/api/admin/users, /api/admin/users/{username}) Tj
+T*
+(Frontend e download/, /status/{job_id}, /results/{job_id}, /download/latest, /download/{job_id}) Tj
+T*
+() Tj
+T*
+(7. Interface Web e Streamlit) Tj
+T*
+(O frontend principal do sistema nao e Streamlit puro. O painel operacional e um frontend) Tj
+T*
+(HTML/CSS/JavaScript servido pela propria API. O Streamlit atua como shell, camada de) Tj
+T*
+(autenticacao e painel administrativo adicional.) Tj
+T*
+(7.1 Arquivos da interface) Tj
+T*
+() Tj
+T*
+(? ui/templates/index.html, status.html e results.html) Tj
+T*
+(? ui/static/style.css e ui/static/app.js) Tj
+T*
+(? ui_streamlit/app.py) Tj
+T*
+() Tj
+T*
+(7.2 Atualizacao em tempo real) Tj
+T*
+() Tj
+T*
+(- A UI abre um canal EventSource para /api/events.) Tj
+T*
+(- O backend envia snapshots periodicos com contadores e informacoes do job atual.) Tj
+T*
+(- Se o canal cair, a UI reconecta automaticamente.) Tj
+T*
+(- Se SSE falhar, permanece o fallback de polling para resiliencia.) Tj
+T*
+() Tj
+T*
+(7.3 Fluxo de autenticacao no Streamlit) Tj
+T*
+() Tj
+T*
+(- Se PASSWORD_AUTH_ENABLED=1, o usuario precisa autenticar.) Tj
+T*
+(- O login principal ocorre via endpoint /api/admin/users/authenticate.) Tj
+T*
+(- O Streamlit valida /api/health e /api/overview antes de incorporar a UI principal.) Tj
+T*
+(- Usuarios admin podem cadastrar, editar e excluir usuarios via a propria interface.) Tj
+T*
+() Tj
+T*
+ET
+endstream
+endobj
+9 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 1 0 R >> >> /Contents 8 0 R >>
+endobj
+10 0 obj
+<< /Length 2421 >>
+stream
+BT
+/F1 11 Tf
+1 0 0 1 42 794 Tm
+15 TL
+(8. Interface Local por Console) Tj
+T*
+(A pasta tools/ abriga a vertente operacional sem navegador.) Tj
+T*
+() Tj
+T*
+(? tools/pm_client.py: cliente HTTP reutilizavel para a API.) Tj
+T*
+(? tools/local_console.py: menu interativo para operacao humana.) Tj
+T*
+(? run_local_console.ps1: atalho PowerShell.) Tj
+T*
+() Tj
+T*
+(Esse modo suporta health, overview, inicio de jobs, consulta de status, espera por conclusao,) Tj
+T*
+(download do output, envio por e-mail e consulta da agenda diaria.) Tj
+T*
+(9. Agendamento Diario e Fila de Jobs) Tj
+T*
+() Tj
+T*
+(? DAILY_RUN_TIMES recebe lista CSV no formato HH:MM.) Tj
+T*
+(? O padrao operacional e 06:00,12:00,18:00.) Tj
+T*
+(? Cada slot diario gera um job automatico identificavel por trigger.) Tj
+T*
+(? O backend evita reenfileirar o mesmo slot mais de uma vez no mesmo dia.) Tj
+T*
+(? Os jobs percorrem estados como QUEUED, RUNNING, DONE, FAILED, STOPPED e CANCELED.) Tj
+T*
+() Tj
+T*
+(10. Canais de Entrega Implementados) Tj
+T*
+(10.1 E-mail) Tj
+T*
+(O sistema suporta envio automatico e manual do output.xlsx. Variaveis relevantes incluem) Tj
+T*
+(SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASSWORD, SMTP_SENDER, GMAIL_USER, GMAIL_APP_PASSWORD,) Tj
+T*
+(EMAIL_RECIPIENTS e EMAIL_SEND_ON.) Tj
+T*
+(10.2 WhatsApp via Twilio) Tj
+T*
+(Variaveis relevantes incluem TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_WHATSAPP_FROM,) Tj
+T*
+(WHATSAPP_RECIPIENTS, WHATSAPP_SEND_ON e APP_PUBLIC_BASE_URL.) Tj
+T*
+(10.3 Google Drive) Tj
+T*
+(O upload para Google Drive usa service account com GOOGLE_DRIVE_CREDENTIALS_FILE,) Tj
+T*
+(GOOGLE_DRIVE_FOLDER_ID e GOOGLE_DRIVE_SEND_ON.) Tj
+T*
+() Tj
+T*
+(11. Paralelismo, Selenium e Playwright) Tj
+T*
+() Tj
+T*
+(? Paralelo com Selenium: Zema, MadeiraMadeira e Probel.) Tj
+T*
+(? Magalu fora do pool paralelo, em rotina dedicada com Playwright.) Tj
+T*
+(? Webcontinental em fluxo HTTP/VTEX.) Tj
+T*
+(? Mercado Livre presente no codigo, mas documentado como desativado do projeto principal atual.) Tj
+T*
+(? Variaveis principais: ENABLE_PARALLEL_SCRAPING, MAX_WORKERS, MAX_SELENIUM_SESSIONS,) Tj
+T*
+(  SELENIUM_REMOTE_URL, SELENIUM_BROWSERS, SELENIUM_DRIVER_MAX_TASKS e bloco de configuracao) Tj
+T*
+(  Magalu.) Tj
+T*
+() Tj
+T*
+(12. Instalacao e Execucao) Tj
+T*
+(12.1 Dependencias Python declaradas) Tj
+T*
+() Tj
+T*
+(pandas) Tj
+T*
+(selenium) Tj
+T*
+(openpyxl) Tj
+T*
+(webdriver-manager) Tj
+T*
+(openai) Tj
+T*
+(playwright) Tj
+T*
+(requests) Tj
+T*
+ET
+endstream
+endobj
+11 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 1 0 R >> >> /Contents 10 0 R >>
+endobj
+12 0 obj
+<< /Length 2311 >>
+stream
+BT
+/F1 11 Tf
+1 0 0 1 42 794 Tm
+15 TL
+(fastapi) Tj
+T*
+(uvicorn) Tj
+T*
+(jinja2) Tj
+T*
+(python-multipart) Tj
+T*
+(streamlit) Tj
+T*
+(tenacity) Tj
+T*
+(pydantic-settings) Tj
+T*
+(pandera) Tj
+T*
+(google-api-python-client) Tj
+T*
+(google-auth) Tj
+T*
+() Tj
+T*
+(12.2 Instaladores disponiveis) Tj
+T*
+() Tj
+T*
+(? install.py: instalador unificado cross-platform.) Tj
+T*
+(? install.ps1: instalacao recomendada em Windows.) Tj
+T*
+(? install.sh e install.command: wrappers Linux/macOS.) Tj
+T*
+() Tj
+T*
+(12.3 Modos de execucao) Tj
+T*
+(ModoComandoEfeito) Tj
+T*
+(Web.\\run.ps1 -InterfaceMode webSobe API e Streamlit.) Tj
+T*
+(Local.\\run.ps1 -InterfaceMode localSobe API e abre console local.) Tj
+T*
+(Both.\\run.ps1 -InterfaceMode bothSobe API, Streamlit e console local.) Tj
+T*
+() Tj
+T*
+(13. Seguranca e Credenciais) Tj
+T*
+() Tj
+T*
+(? API_TOKEN para proteger consumo remoto da API.) Tj
+T*
+(? Login de usuarios no Streamlit e no painel admin.) Tj
+T*
+(? CRUD de usuarios com perfil admin ou operator.) Tj
+T*
+(? Persistencia controlada de usuarios em runs/admin_users.json.) Tj
+T*
+(? Configuracoes sensiveis lidas de .env.) Tj
+T*
+() Tj
+T*
+(Atencao: a documentacao final nao deve registrar credenciais reais, senhas temporarias ou tokens) Tj
+T*
+(efetivos do ambiente. O objetivo e preservar conhecimento tecnico sem comprometer seguranca) Tj
+T*
+(futura.) Tj
+T*
+(14. Deploy em Servidor Linux) Tj
+T*
+() Tj
+T*
+(? Artefatos em deploy/server/ para systemd, Nginx e healthcheck.) Tj
+T*
+(? Recomendacao de Python 3.11 ou 3.13 para deploy Linux.) Tj
+T*
+(? Pontos obrigatorios: API_TOKEN forte, PASSWORD_AUTH_ENABLED=1, senha bootstrap alterada,) Tj
+T*
+(  API_BASE e APP_PUBLIC_BASE_URL corretos.) Tj
+T*
+(? Preservar runs/, input.xlsx e arquivo de ambiente do servidor.) Tj
+T*
+() Tj
+T*
+(15. Publicacao Externa: Situacao Atual) Tj
+T*
+(Durante a fase de suporte recente, foram avaliadas estrategias de compartilhamento externo da UI) Tj
+T*
+(sem dominio proprio. O Tailscale Funnel mostrou configuracao local, mas nao se consolidou como) Tj
+T*
+(acesso externo utilizavel na internet publica para o caso analisado. A frente de) Tj
+T*
+(compartilhamento foi pausada por decisao operacional, ate escolha de uma alternativa mais) Tj
+T*
+(previsivel como Cloudflare Tunnel, ngrok, dominio proprio com proxy ou deploy em servidor) Tj
+T*
+(dedicado.) Tj
+T*
+ET
+endstream
+endobj
+13 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 1 0 R >> >> /Contents 12 0 R >>
+endobj
+14 0 obj
+<< /Length 1920 >>
+stream
+BT
+/F1 11 Tf
+1 0 0 1 42 794 Tm
+15 TL
+(16. Operacao do Dia a Dia) Tj
+T*
+() Tj
+T*
+(- Garantir Python e ambiente virtual funcional.) Tj
+T*
+(- Executar install.ps1 ou install.py quando necessario.) Tj
+T*
+(- Revisar .env com as configuracoes necessarias.) Tj
+T*
+(- Subir o sistema com run.ps1.) Tj
+T*
+(- Abrir a UI Streamlit ou usar o console local.) Tj
+T*
+(- Disparar um job manual e acompanhar o status.) Tj
+T*
+(- Baixar o output ou aguardar entrega automatica configurada.) Tj
+T*
+() Tj
+T*
+(Invoke-WebRequest http://127.0.0.1:8000/api/health) Tj
+T*
+(Invoke-WebRequest http://127.0.0.1:8000/api/overview) Tj
+T*
+(Invoke-WebRequest http://127.0.0.1:8000/api/daily/latest) Tj
+T*
+(.\\run.ps1) Tj
+T*
+(.\\run.ps1 -InterfaceMode local) Tj
+T*
+(python tools/local_console.py --api-base http://127.0.0.1:8000) Tj
+T*
+() Tj
+T*
+(17. Riscos, Cuidados e Recomendacoes Futuras) Tj
+T*
+() Tj
+T*
+(? Coletores de e-commerce sao sensiveis a mudancas de DOM e bloqueios anti-bot.) Tj
+T*
+(? Ambientes Windows podem perder referencia do Python-base e quebrar venv antigos.) Tj
+T*
+(? Publicacao externa da UI exige atencao com autenticacao, SSE e origem do iframe.) Tj
+T*
+(? Criar rotina formal de backup para runs/, input.xlsx e configuracoes de servidor.) Tj
+T*
+(? Formalizar uma estrategia unica de publicacao externa em vez de manter multiplas abordagens) Tj
+T*
+(  experimentais.) Tj
+T*
+(? Adicionar testes automatizados para endpoints principais e fluxos de validacao de API_BASE.) Tj
+T*
+() Tj
+T*
+(18. Encerramento) Tj
+T*
+(Este documento foi consolidado para servir como memoria tecnica permanente do projeto. Ele) Tj
+T*
+(descreve nao apenas o estado atual do codigo, mas tambem as decisoes estruturais que) Tj
+T*
+(transformaram o Agente de Precos em uma plataforma operacional completa, com backend, painel,) Tj
+T*
+(console local, automacao, agenda e distribuicao de resultados.) Tj
+T*
+(Fim da documentacao consolidada em 18/03/2026.) Tj
+T*
+ET
+endstream
+endobj
+15 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 1 0 R >> >> /Contents 14 0 R >>
+endobj
+16 0 obj
+<< /Type /Pages /Count 7 /Kids [3 0 R 5 0 R 7 0 R 9 0 R 11 0 R 13 0 R 15 0 R] >>
+endobj
+17 0 obj
+<< /Type /Catalog /Pages 16 0 R >>
+endobj
+xref
+0 18
+0000000000 65535 f 
+0000000015 00000 n 
+0000000085 00000 n 
+0000003873 00000 n 
+0000003999 00000 n 
+0000007258 00000 n 
+0000007384 00000 n 
+0000010203 00000 n 
+0000010329 00000 n 
+0000013163 00000 n 
+0000013289 00000 n 
+0000015763 00000 n 
+0000015891 00000 n 
+0000018255 00000 n 
+0000018383 00000 n 
+0000020356 00000 n 
+0000020484 00000 n 
+0000020581 00000 n 
+trailer
+<< /Size 18 /Root 17 0 R >>
+startxref
+20632
+%%EOF

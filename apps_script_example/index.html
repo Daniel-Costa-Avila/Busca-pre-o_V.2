@@ -1,0 +1,50 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+    <style>
+      body { font-family: Arial, sans-serif; margin: 24px; }
+      .card { max-width: 600px; padding: 16px; border: 1px solid #ddd; border-radius: 8px; }
+      input, button { padding: 8px; margin-top: 8px; width: 100%; }
+      .response { margin-top: 12px; background: #f7f7f7; padding: 10px; border-radius: 6px; white-space: pre-wrap; }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <h2>Portal Interno</h2>
+      <p>Bem-vindo, <strong><?= userEmail ?></strong></p>
+
+      <label>Planilha de pesquisa (.xlsx)</label>
+      <input id="file-input" type="file" accept=".xlsx">
+
+      <button onclick="startRun()">Iniciar Pesquisa</button>
+
+      <div class="response" id="response">Resposta aparecera aqui</div>
+    </div>
+
+    <script>
+      function showResponse(text) {
+        document.getElementById("response").innerText = text;
+      }
+
+      function startRun() {
+        const file = document.getElementById("file-input").files[0];
+        if (!file) {
+          showResponse("Selecione uma planilha.");
+          return;
+        }
+
+        showResponse("Enviando planilha...");
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          const base64 = e.target.result.split(",")[1];
+          google.script.run
+            .withSuccessHandler(res => showResponse(res))
+            .withFailureHandler(err => showResponse("Erro: " + err.message))
+            .uploadAndRun(base64, file.name);
+        };
+        reader.readAsDataURL(file);
+      }
+    </script>
+  </body>
+</html>

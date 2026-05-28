@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <title>Documentacao Completa do Sistema - Agente de Precos</title>
+  <style>
+    @page { size: A4; margin: 20mm 14mm 18mm 14mm; }
+    body { margin: 0; color: #16202a; font-family: "Segoe UI", Arial, sans-serif; font-size: 11.5pt; line-height: 1.45; }
+    h1, h2, h3, h4 { margin: 0 0 10px; line-height: 1.2; }
+    h1 { font-size: 24pt; }
+    h2 { margin-top: 28px; padding-bottom: 6px; font-size: 16pt; border-bottom: 1px solid #d7dee5; }
+    h3 { margin-top: 18px; font-size: 13pt; color: #1c6dd0; }
+    h4 { margin-top: 14px; font-size: 11.5pt; }
+    p { margin: 0 0 10px; }
+    ul, ol { margin: 8px 0 12px 22px; padding: 0; }
+    li { margin: 4px 0; }
+    code { padding: 1px 4px; font-family: Consolas, "Courier New", monospace; font-size: 10pt; background: #f7f9fc; border-radius: 4px; }
+    pre { margin: 10px 0 14px; padding: 12px; white-space: pre-wrap; word-break: break-word; font-family: Consolas, "Courier New", monospace; font-size: 9.5pt; line-height: 1.45; background: #f7f9fc; border: 1px solid #d7dee5; border-radius: 8px; }
+    table { width: 100%; margin: 10px 0 16px; border-collapse: collapse; font-size: 10.5pt; }
+    th, td { padding: 8px 10px; vertical-align: top; text-align: left; border: 1px solid #d7dee5; }
+    th { background: #eaf2fd; }
+    .cover { min-height: 240mm; display: flex; flex-direction: column; justify-content: center; gap: 16px; }
+    .cover-card { padding: 22px 24px; background: linear-gradient(135deg, #f2f7ff, #ffffff); border: 1px solid #d7dee5; border-radius: 16px; }
+    .meta { color: #52606d; font-size: 10.5pt; }
+    .note { margin: 12px 0 16px; padding: 12px 14px; background: #fff7e8; border-left: 4px solid #d97706; border-radius: 8px; }
+    .ok { margin: 12px 0 16px; padding: 12px 14px; background: #ecfdf3; border-left: 4px solid #16a34a; border-radius: 8px; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .card { padding: 12px 14px; background: #fff; border: 1px solid #d7dee5; border-radius: 10px; }
+    .page-break { page-break-before: always; }
+  </style>
+</head>
+<body>
+  <section class="cover">
+    <div class="cover-card">
+      <h1>Documentacao Completa do Sistema</h1>
+      <p><strong>Projeto:</strong> Agente de Precos / Price Monitor Pro</p>
+      <p><strong>Objetivo do documento:</strong> registrar de forma minuciosa a arquitetura, as funcionalidades implementadas, a operacao, os fluxos de negocio, os arquivos-chave e as orientacoes de manutencao futura do sistema.</p>
+      <p class="meta">Versao consolidada em 18/03/2026, baseada no codigo-fonte presente na raiz do projeto, na documentacao existente e nas configuracoes operacionais observadas no ambiente.</p>
+    </div>
+    <div class="grid-2">
+      <div class="card">
+        <h3>Resumo executivo</h3>
+        <p>O sistema processa planilhas de produtos, identifica o canal de cada item, coleta precos por automacao ou HTTP, grava os resultados em planilha, disponibiliza painel web, shell Streamlit e interface de terminal, alem de permitir agendamento, envio de e-mail, WhatsApp e Google Drive.</p>
+      </div>
+      <div class="card">
+        <h3>Fontes usadas nesta consolidacao</h3>
+        <ul>
+          <li><code>README.md</code></li>
+          <li><code>DOCUMENTACAO_COMPLETA.md</code></li>
+          <li><code>App/main.py</code></li>
+          <li><code>ui/server.py</code></li>
+          <li><code>ui_streamlit/app.py</code></li>
+          <li><code>run.ps1</code>, <code>install.py</code> e <code>install.ps1</code></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="page-break">
+    <h2>1. Visao Geral do Sistema</h2>
+    <p>O Agente de Precos e um sistema de automacao operacional focado em leitura de planilhas, coleta de precos em marketplaces e geracao de saida estruturada. A aplicacao foi expandida para funcionar em mais de uma forma de uso: via linha de comando, via API HTTP, via painel HTML/JavaScript e via shell Streamlit com camada de autenticacao.</p>
+    <p>Na pratica, o projeto deixou de ser apenas um coletor executado por script e passou a ser uma plataforma local de operacao de pesquisas de preco, com fila de jobs, persistencia de estado, acompanhamento em tempo real e distribuicao automatica de resultados.</p>
+    <h3>1.1 Objetivos atendidos pelo sistema</h3>
+    <ul>
+      <li>Receber uma planilha de entrada padronizada.</li>
+      <li>Identificar, por link ou canal, qual coletor deve ser utilizado.</li>
+      <li>Executar scraping/coleta e gerar uma planilha de saida estruturada.</li>
+      <li>Disponibilizar operacao por interface web e por console local.</li>
+      <li>Suportar execucao manual e automatica por agenda diaria.</li>
+      <li>Enviar resultados por e-mail, WhatsApp e Google Drive.</li>
+      <li>Permitir autenticacao de usuarios para acesso ao painel.</li>
+    </ul>
+    <h3>1.2 Componentes principais</h3>
+    <table>
+      <tr><th>Componente</th><th>Arquivo principal</th><th>Papel</th></tr>
+      <tr><td>Coletor principal</td><td><code>App/main.py</code></td><td>Le leitura da planilha, roteamento por canal e geracao do output.</td></tr>
+      <tr><td>Backend HTTP</td><td><code>ui/server.py</code></td><td>API FastAPI, fila de jobs, scheduler, envios e autenticacao.</td></tr>
+      <tr><td>Painel web</td><td><code>ui/templates/*</code> e <code>ui/static/*</code></td><td>UX operacional do sistema.</td></tr>
+      <tr><td>Shell Streamlit</td><td><code>ui_streamlit/app.py</code></td><td>Casca autenticada que incorpora o painel principal.</td></tr>
+      <tr><td>Cliente local</td><td><code>tools/local_console.py</code></td><td>Operacao sem navegador.</td></tr>
+      <tr><td>Instalacao</td><td><code>install.py</code> e <code>install.ps1</code></td><td>Provisionamento do ambiente.</td></tr>
+    </table>
+
+    <h2>2. O Que Foi Feito no Sistema</h2>
+    <ul>
+      <li>Introducao de uma API FastAPI para gerenciar jobs, status, downloads e configuracoes em runtime.</li>
+      <li>Criacao de um painel web em HTML/CSS/JS com atualizacao em tempo real por SSE e fallback de polling.</li>
+      <li>Criacao de um shell Streamlit para operacao simplificada e autenticada.</li>
+      <li>Criacao de um cliente reutilizavel para operar a API local ou remota a partir do terminal.</li>
+      <li>Implementacao de agendamento diario multiplo com janelas de disparo configuraveis.</li>
+      <li>Implementacao de envio automatico e manual de planilhas por e-mail.</li>
+      <li>Implementacao de envio por WhatsApp via Twilio.</li>
+      <li>Implementacao de upload automatico ou manual para Google Drive.</li>
+      <li>Implementacao de autenticacao de usuarios com CRUD administrativo.</li>
+      <li>Separacao de modos de execucao: web, local e hibrido.</li>
+      <li>Preparacao de deploy em Linux com <code>systemd</code>, Nginx e variaveis de ambiente dedicadas.</li>
+      <li>Melhorias recentes no instalador para detectar e recriar <code>venv</code> quebrado.</li>
+    </ul>
+    <div class="note">
+      <strong>Observacao importante:</strong> os instaladores foram corrigidos para nao reportarem sucesso falso quando o ambiente virtual estivesse apontando para um Python removido. Hoje eles detectam ambiente quebrado, movem o <code>venv</code> invalido para backup e recriam o ambiente.
+    </div>
+
+    <h2>3. Estrutura de Pastas e Responsabilidades</h2>
+    <table>
+      <tr><th>Pasta / arquivo</th><th>Funcao no sistema</th></tr>
+      <tr><td><code>App/</code></td><td>Nucleo do scraping, configuracao e coletores.</td></tr>
+      <tr><td><code>App/collectors/</code></td><td>Implementacoes por canal e modulo especializado.</td></tr>
+      <tr><td><code>App/utils/</code></td><td>Helpers de navegador, VTEX, formatacao e APIs auxiliares.</td></tr>
+      <tr><td><code>ui/</code></td><td>Backend FastAPI e frontend HTML embutido.</td></tr>
+      <tr><td><code>ui_streamlit/</code></td><td>Shell Streamlit que encapsula a aplicacao principal.</td></tr>
+      <tr><td><code>tools/</code></td><td>Cliente Python reutilizavel e console local.</td></tr>
+      <tr><td><code>deploy/server/</code></td><td>Artefatos para deploy Linux com <code>systemd</code> e Nginx.</td></tr>
+      <tr><td><code>runs/</code></td><td>Estado persistente de runtime: token, jobs, usuarios e configuracoes salvas.</td></tr>
+    </table>
+  </section>
+
+  <section>
+    <h2>4. Nucleo de Coleta: <code>App/main.py</code></h2>
+    <p>O arquivo <code>App/main.py</code> continua sendo o centro do processamento bruto de planilhas. Ele e responsavel por abrir o arquivo de entrada, encontrar as colunas relevantes, decidir qual coletor sera usado e gravar o arquivo final.</p>
+    <h3>4.1 Responsabilidades principais</h3>
+    <ul>
+      <li>Ler <code>input.xlsx</code> ou outro caminho recebido por argumento/variavel.</li>
+      <li>Normalizar nomes de colunas para tolerar variacoes de acentuacao e rotulos.</li>
+      <li>Extrair URL visivel ou hyperlink real da celula.</li>
+      <li>Resolver qual coletor sera usado para cada linha.</li>
+      <li>Padronizar os campos <code>A prazo</code>, <code>A vista</code> e <code>Parcelamento</code>.</li>
+      <li>Gerar a aba <code>Output</code> e a aba <code>Consolidado</code>.</li>
+      <li>Aplicar filtros por quantidade de linhas ou IDs especificos.</li>
+    </ul>
+    <h3>4.2 Coletores reconhecidos</h3>
+    <table>
+      <tr><th>Canal</th><th>Estrategia principal</th></tr>
+      <tr><td>Magalu</td><td>Playwright e suporte a API oficial.</td></tr>
+      <tr><td>Webcontinental</td><td>Fluxo HTTP/VTEX.</td></tr>
+      <tr><td>Zema</td><td>Selenium.</td></tr>
+      <tr><td>MadeiraMadeira</td><td>Selenium.</td></tr>
+      <tr><td>Probel</td><td>Selenium.</td></tr>
+      <tr><td>Mercado Livre</td><td>Codigo ainda presente, mas documentado como desativado para o projeto principal atual.</td></tr>
+    </table>
+
+    <h2>5. Configuracao Central via <code>App/config.py</code></h2>
+    <p>As classes <code>ScraperSettings</code> e <code>ServerSettings</code> organizam a configuracao do sistema e leem automaticamente o arquivo <code>.env</code>. Isso centraliza defaults, validacoes e limites operacionais.</p>
+    <ul>
+      <li><code>enable_parallel_scraping</code>, <code>max_workers</code>, <code>max_selenium_sessions</code></li>
+      <li><code>selenium_driver_max_tasks</code>, <code>selenium_page_load_timeout</code> e retries de abertura</li>
+      <li><code>daily_auto_enabled</code>, <code>daily_run_times</code>, <code>api_token</code> e <code>max_active_jobs</code></li>
+      <li>blocos completos para SMTP/Gmail, Twilio/WhatsApp, Google Drive e intervalo de eventos da UI</li>
+    </ul>
+    <div class="ok">
+      <strong>Beneficio pratico:</strong> toda a configuracao sensivel fica fora do codigo e pode ser adaptada entre ambiente local, servidor Linux e futuros modos de publicacao.
+    </div>
+
+    <h2>6. Backend HTTP: <code>ui/server.py</code></h2>
+    <p>Este arquivo concentrou a maior parte da evolucao do sistema. Ele deixou de ser apenas um adaptador e se tornou o backend orquestrador do produto.</p>
+    <h3>6.1 Responsabilidades principais</h3>
+    <ul>
+      <li>Expor o status de saude da aplicacao.</li>
+      <li>Manter fila de jobs e execucao serializada/limitada.</li>
+      <li>Gerenciar scheduler diario.</li>
+      <li>Persistir configuracoes de email, WhatsApp, Google Drive e agendamento.</li>
+      <li>Persistir usuarios administrativos e sessoes autenticadas.</li>
+      <li>Disponibilizar snapshots do estado via <code>/api/events</code>.</li>
+      <li>Entregar HTML do painel principal e arquivos de output.</li>
+    </ul>
+    <h3>6.2 Estruturas centrais</h3>
+    <ul>
+      <li><code>Job</code>: dataclass que guarda trigger, status, tempos, caminhos de input/output e status de entregas.</li>
+      <li><code>jobs</code>: dicionario em memoria com o historico recente de execucoes.</li>
+      <li><code>job_queue</code>: fila de jobs aguardando processamento.</li>
+      <li><code>latest_manual_job_id</code> e <code>latest_daily_job_id</code>: referencias para a ultima execucao de cada tipo.</li>
+      <li>arquivos persistentes em <code>runs/</code> para token, usuarios e configuracoes.</li>
+    </ul>
+    <h3>6.3 Endpoints implementados</h3>
+    <table>
+      <tr><th>Grupo</th><th>Endpoints</th></tr>
+      <tr><td>Saude e overview</td><td><code>/api/health</code>, <code>/api/overview</code>, <code>/api/functions/check</code></td></tr>
+      <tr><td>Execucao</td><td><code>/run</code>, <code>/api/run</code>, <code>/api/jobs/stop</code>, <code>/api/status/{job_id}</code></td></tr>
+      <tr><td>Ultimos resultados</td><td><code>/api/manual/latest</code>, <code>/api/daily/latest</code>, <code>/api/output/latest</code></td></tr>
+      <tr><td>Email</td><td><code>/api/email/settings</code>, <code>/api/email/{job_id}/send</code>, <code>/api/email/send/latest</code></td></tr>
+      <tr><td>WhatsApp</td><td><code>/api/whatsapp/settings</code>, <code>/api/whatsapp/{job_id}/send</code>, <code>/api/whatsapp/send/latest</code></td></tr>
+      <tr><td>Google Drive</td><td><code>/api/drive/settings</code>, <code>/api/drive/{job_id}/upload</code>, <code>/api/drive/upload/latest</code></td></tr>
+      <tr><td>Agenda e eventos</td><td><code>/api/daily/settings</code>, <code>/api/events</code></td></tr>
+      <tr><td>Credenciais de marketplace</td><td><code>/api/marketplace/credentials</code>, <code>/api/marketplace/credentials/magalu</code></td></tr>
+      <tr><td>Usuarios administrativos</td><td><code>/api/admin/users/authenticate</code>, <code>/api/admin/users/logout</code>, <code>/api/admin/users</code>, <code>/api/admin/users/{username}</code></td></tr>
+      <tr><td>Frontend e download</td><td><code>/</code>, <code>/status/{job_id}</code>, <code>/results/{job_id}</code>, <code>/download/latest</code>, <code>/download/{job_id}</code></td></tr>
+    </table>
+  </section>
+
+  <section class="page-break">
+    <h2>7. Interface Web e Streamlit</h2>
+    <p>O frontend principal do sistema nao e Streamlit puro. O painel operacional e um frontend HTML/CSS/JavaScript servido pela propria API. O Streamlit atua como shell, camada de autenticacao e painel administrativo adicional.</p>
+    <h3>7.1 Arquivos da interface</h3>
+    <ul>
+      <li><code>ui/templates/index.html</code>, <code>status.html</code> e <code>results.html</code></li>
+      <li><code>ui/static/style.css</code> e <code>ui/static/app.js</code></li>
+      <li><code>ui_streamlit/app.py</code></li>
+    </ul>
+    <h3>7.2 Atualizacao em tempo real</h3>
+    <ol>
+      <li>A UI abre um canal <code>EventSource</code> para <code>/api/events</code>.</li>
+      <li>O backend envia snapshots periodicos com contadores e informacoes do job atual.</li>
+      <li>Se o canal cair, a UI reconecta automaticamente.</li>
+      <li>Se SSE falhar, permanece o fallback de polling para resiliencia.</li>
+    </ol>
+    <h3>7.3 Fluxo de autenticacao no Streamlit</h3>
+    <ol>
+      <li>Se <code>PASSWORD_AUTH_ENABLED=1</code>, o usuario precisa autenticar.</li>
+      <li>O login principal ocorre via endpoint <code>/api/admin/users/authenticate</code>.</li>
+      <li>O Streamlit valida <code>/api/health</code> e <code>/api/overview</code> antes de incorporar a UI principal.</li>
+      <li>Usuarios admin podem cadastrar, editar e excluir usuarios via a propria interface.</li>
+    </ol>
+
+    <h2>8. Interface Local por Console</h2>
+    <p>A pasta <code>tools/</code> abriga a vertente operacional sem navegador.</p>
+    <ul>
+      <li><code>tools/pm_client.py</code>: cliente HTTP reutilizavel para a API.</li>
+      <li><code>tools/local_console.py</code>: menu interativo para operacao humana.</li>
+      <li><code>run_local_console.ps1</code>: atalho PowerShell.</li>
+    </ul>
+    <p>Esse modo suporta health, overview, inicio de jobs, consulta de status, espera por conclusao, download do output, envio por e-mail e consulta da agenda diaria.</p>
+
+    <h2>9. Agendamento Diario e Fila de Jobs</h2>
+    <ul>
+      <li><code>DAILY_RUN_TIMES</code> recebe lista CSV no formato <code>HH:MM</code>.</li>
+      <li>O padrao operacional e <code>06:00,12:00,18:00</code>.</li>
+      <li>Cada slot diario gera um job automatico identificavel por trigger.</li>
+      <li>O backend evita reenfileirar o mesmo slot mais de uma vez no mesmo dia.</li>
+      <li>Os jobs percorrem estados como <code>QUEUED</code>, <code>RUNNING</code>, <code>DONE</code>, <code>FAILED</code>, <code>STOPPED</code> e <code>CANCELED</code>.</li>
+    </ul>
+
+    <h2>10. Canais de Entrega Implementados</h2>
+    <h3>10.1 E-mail</h3>
+    <p>O sistema suporta envio automatico e manual do <code>output.xlsx</code>. Variaveis relevantes incluem <code>SMTP_HOST</code>, <code>SMTP_PORT</code>, <code>SMTP_USER</code>, <code>SMTP_PASSWORD</code>, <code>SMTP_SENDER</code>, <code>GMAIL_USER</code>, <code>GMAIL_APP_PASSWORD</code>, <code>EMAIL_RECIPIENTS</code> e <code>EMAIL_SEND_ON</code>.</p>
+    <h3>10.2 WhatsApp via Twilio</h3>
+    <p>Variaveis relevantes incluem <code>TWILIO_ACCOUNT_SID</code>, <code>TWILIO_AUTH_TOKEN</code>, <code>TWILIO_WHATSAPP_FROM</code>, <code>WHATSAPP_RECIPIENTS</code>, <code>WHATSAPP_SEND_ON</code> e <code>APP_PUBLIC_BASE_URL</code>.</p>
+    <h3>10.3 Google Drive</h3>
+    <p>O upload para Google Drive usa service account com <code>GOOGLE_DRIVE_CREDENTIALS_FILE</code>, <code>GOOGLE_DRIVE_FOLDER_ID</code> e <code>GOOGLE_DRIVE_SEND_ON</code>.</p>
+  </section>
+
+  <section>
+    <h2>11. Paralelismo, Selenium e Playwright</h2>
+    <ul>
+      <li>Paralelo com Selenium: Zema, MadeiraMadeira e Probel.</li>
+      <li>Magalu fora do pool paralelo, em rotina dedicada com Playwright.</li>
+      <li>Webcontinental em fluxo HTTP/VTEX.</li>
+      <li>Mercado Livre presente no codigo, mas documentado como desativado do projeto principal atual.</li>
+      <li>Variaveis principais: <code>ENABLE_PARALLEL_SCRAPING</code>, <code>MAX_WORKERS</code>, <code>MAX_SELENIUM_SESSIONS</code>, <code>SELENIUM_REMOTE_URL</code>, <code>SELENIUM_BROWSERS</code>, <code>SELENIUM_DRIVER_MAX_TASKS</code> e bloco de configuracao Magalu.</li>
+    </ul>
+
+    <h2>12. Instalacao e Execucao</h2>
+    <h3>12.1 Dependencias Python declaradas</h3>
+    <pre>pandas
+selenium
+openpyxl
+webdriver-manager
+openai
+playwright
+requests
+fastapi
+uvicorn
+jinja2
+python-multipart
+streamlit
+tenacity
+pydantic-settings
+pandera
+google-api-python-client
+google-auth</pre>
+    <h3>12.2 Instaladores disponiveis</h3>
+    <ul>
+      <li><code>install.py</code>: instalador unificado cross-platform.</li>
+      <li><code>install.ps1</code>: instalacao recomendada em Windows.</li>
+      <li><code>install.sh</code> e <code>install.command</code>: wrappers Linux/macOS.</li>
+    </ul>
+    <h3>12.3 Modos de execucao</h3>
+    <table>
+      <tr><th>Modo</th><th>Comando</th><th>Efeito</th></tr>
+      <tr><td>Web</td><td><code>.\run.ps1 -InterfaceMode web</code></td><td>Sobe API e Streamlit.</td></tr>
+      <tr><td>Local</td><td><code>.\run.ps1 -InterfaceMode local</code></td><td>Sobe API e abre console local.</td></tr>
+      <tr><td>Both</td><td><code>.\run.ps1 -InterfaceMode both</code></td><td>Sobe API, Streamlit e console local.</td></tr>
+    </table>
+
+    <h2>13. Seguranca e Credenciais</h2>
+    <ul>
+      <li><code>API_TOKEN</code> para proteger consumo remoto da API.</li>
+      <li>Login de usuarios no Streamlit e no painel admin.</li>
+      <li>CRUD de usuarios com perfil <code>admin</code> ou <code>operator</code>.</li>
+      <li>Persistencia controlada de usuarios em <code>runs/admin_users.json</code>.</li>
+      <li>Configuracoes sensiveis lidas de <code>.env</code>.</li>
+    </ul>
+    <div class="note">
+      <strong>Atencao:</strong> a documentacao final nao deve registrar credenciais reais, senhas temporarias ou tokens efetivos do ambiente. O objetivo e preservar conhecimento tecnico sem comprometer seguranca futura.
+    </div>
+
+    <h2>14. Deploy em Servidor Linux</h2>
+    <ul>
+      <li>Artefatos em <code>deploy/server/</code> para <code>systemd</code>, Nginx e healthcheck.</li>
+      <li>Recomendacao de Python 3.11 ou 3.13 para deploy Linux.</li>
+      <li>Pontos obrigatorios: <code>API_TOKEN</code> forte, <code>PASSWORD_AUTH_ENABLED=1</code>, senha bootstrap alterada, <code>API_BASE</code> e <code>APP_PUBLIC_BASE_URL</code> corretos.</li>
+      <li>Preservar <code>runs/</code>, <code>input.xlsx</code> e arquivo de ambiente do servidor.</li>
+    </ul>
+
+    <h2>15. Publicacao Externa: Situacao Atual</h2>
+    <p>Durante a fase de suporte recente, foram avaliadas estrategias de compartilhamento externo da UI sem dominio proprio. O Tailscale Funnel mostrou configuracao local, mas nao se consolidou como acesso externo utilizavel na internet publica para o caso analisado. A frente de compartilhamento foi pausada por decisao operacional, ate escolha de uma alternativa mais previsivel como Cloudflare Tunnel, ngrok, dominio proprio com proxy ou deploy em servidor dedicado.</p>
+
+    <h2>16. Operacao do Dia a Dia</h2>
+    <ol>
+      <li>Garantir Python e ambiente virtual funcional.</li>
+      <li>Executar <code>install.ps1</code> ou <code>install.py</code> quando necessario.</li>
+      <li>Revisar <code>.env</code> com as configuracoes necessarias.</li>
+      <li>Subir o sistema com <code>run.ps1</code>.</li>
+      <li>Abrir a UI Streamlit ou usar o console local.</li>
+      <li>Disparar um job manual e acompanhar o status.</li>
+      <li>Baixar o output ou aguardar entrega automatica configurada.</li>
+    </ol>
+    <pre>Invoke-WebRequest http://127.0.0.1:8000/api/health
+Invoke-WebRequest http://127.0.0.1:8000/api/overview
+Invoke-WebRequest http://127.0.0.1:8000/api/daily/latest
+.\run.ps1
+.\run.ps1 -InterfaceMode local
+python tools/local_console.py --api-base http://127.0.0.1:8000</pre>
+
+    <h2>17. Riscos, Cuidados e Recomendacoes Futuras</h2>
+    <ul>
+      <li>Coletores de e-commerce sao sensiveis a mudancas de DOM e bloqueios anti-bot.</li>
+      <li>Ambientes Windows podem perder referencia do Python-base e quebrar <code>venv</code> antigos.</li>
+      <li>Publicacao externa da UI exige atencao com autenticacao, SSE e origem do iframe.</li>
+      <li>Criar rotina formal de backup para <code>runs/</code>, <code>input.xlsx</code> e configuracoes de servidor.</li>
+      <li>Formalizar uma estrategia unica de publicacao externa em vez de manter multiplas abordagens experimentais.</li>
+      <li>Adicionar testes automatizados para endpoints principais e fluxos de validacao de <code>API_BASE</code>.</li>
+    </ul>
+
+    <h2>18. Encerramento</h2>
+    <p>Este documento foi consolidado para servir como memoria tecnica permanente do projeto. Ele descreve nao apenas o estado atual do codigo, mas tambem as decisoes estruturais que transformaram o Agente de Precos em uma plataforma operacional completa, com backend, painel, console local, automacao, agenda e distribuicao de resultados.</p>
+    <p class="meta">Fim da documentacao consolidada em 18/03/2026.</p>
+  </section>
+</body>
+</html>

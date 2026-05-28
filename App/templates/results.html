@@ -1,0 +1,26 @@
+<h1>Resultados</h1>
+
+<table border="1" cellpadding="6">
+  <tr>
+    <th>Produto</th>
+    <th>Canal</th>
+    <th>A prazo</th>
+    <th>A vista</th>
+    <th>Parcelamento</th>
+    <th>Status</th>
+  </tr>
+
+  {% for row in rows %}
+  <tr>
+    <td>{{ row.produto }}</td>
+    <td>{{ row.canal }}</td>
+    <td>{{ row.avista }}</td>
+    <td>{{ row.pix }}</td>
+    <td>{{ row.prazo }}</td>
+    <td>{{ row.status }}</td>
+  </tr>
+  {% endfor %}
+</table>
+
+<br>
+<a href="/">Voltar ao Dashboard</a>

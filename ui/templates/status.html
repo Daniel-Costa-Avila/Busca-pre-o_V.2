@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+
+{% block title %}Status - Price Monitor Console{% endblock %}
+
+{% block head_extra %}
+    {% if job.status in ["QUEUED", "RUNNING"] %}
+    <meta http-equiv="refresh" content="5">
+    {% endif %}
+{% endblock %}
+
+{% block body %}
+<main class="view-shell">
+    <header class="view-top glass reveal">
+        <div class="view-brand-wrap">
+            <div class="brand-mark brand-mark-compact" aria-hidden="true">
+                <img src="/static/company-logo.svg" alt="Logo da empresa" class="brand-logo">
+            </div>
+            <div>
+                <p class="kicker">Status de execucao</p>
+                <h1>Job {{ job.job_id }}</h1>
+                <p class="hero-text">Atualizacao automatica a cada 5 segundos enquanto o job estiver em execucao.</p>
+            </div>
+        </div>
+        <div class="status-pill
+            {% if job.status == 'DONE' %}status-done{% endif %}
+            {% if job.status == 'FAILED' %}status-failed{% endif %}
+            {% if job.status == 'RUNNING' %}status-running{% endif %}
+            {% if job.status == 'QUEUED' %}status-queued{% endif %}
+            {% if job.status == 'STOPPED' %}status-stopped{% endif %}
+            {% if job.status == 'CANCELED' %}status-canceled{% endif %}
+        ">
+            {{ job.status }}
+        </div>
+    </header>
+
+    <section class="view-grid">
+        <article class="panel glass reveal">
+            <div class="panel-head">
+                <p class="kicker">Resumo</p>
+                <h3>Detalhes do job</h3>
+            </div>
+
+            <div class="status-block">
+                <div class="kv-line">
+                    <span>Job ID</span>
+                    <strong>{{ job.job_id }}</strong>
+                </div>
+                <div class="kv-line">
+                    <span>Trigger</span>
+                    <strong>{{ job.trigger }}</strong>
+                </div>
+                <div class="kv-line">
+                    <span>Status</span>
+                    <strong>{{ job.status }}</strong>
+                </div>
+                {% if job.started_at %}
+                <div class="kv-line">
+                    <span>Iniciado em</span>
+                    <strong>{{ job.started_at }}</strong>
+                </div>
+                {% endif %}
+                {% if job.finished_at %}
+                <div class="kv-line">
+                    <span>Finalizado em</span>
+                    <strong>{{ job.finished_at }}</strong>
+                </div>
+                {% endif %}
+                {% if job.error %}
+                <div class="kv-line kv-line-error">
+                    <span>Erro</span>
+                    <strong>{{ job.error }}</strong>
+                </div>
+                {% endif %}
+            </div>
+        </article>
+
+        <article class="panel glass reveal">
+            <div class="panel-head">
+                <p class="kicker">Acoes</p>
+                <h3>Atalhos operacionais</h3>
+            </div>
+
+            <div class="stack">
+                {% if job.output_path and job.output_path.exists() %}
+                <a href="/results/{{ job.job_id }}" class="btn btn-primary">Ver Resultados</a>
+                <a href="/download/{{ job.job_id }}" class="btn btn-ghost">Baixar Output</a>
+                {% else %}
+                <div class="feedback">Output ainda nao disponivel para este job.</div>
+                {% endif %}
+                <a href="/" class="btn btn-secondary">Voltar ao Painel</a>
+            </div>
+        </article>
+    </section>
+</main>
+{% endblock %}

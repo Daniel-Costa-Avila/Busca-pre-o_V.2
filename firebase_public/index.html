@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel Operacional - Price Monitor</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Public+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body class="theme-apple density-comfortable">
+<div class="noise-layer"></div>
+<div class="ambient ambient-a"></div>
+<div class="ambient ambient-b"></div>
+
+<main class="app-shell">
+    <header class="topbar glass reveal">
+        <div class="brand-wrap">
+            <div class="brand-mark" aria-hidden="true">
+                <img src="/static/company-logo.svg" alt="Logo da empresa" class="brand-logo">
+            </div>
+            <div>
+                <p class="kicker">Operacoes</p>
+                <h1>Price Monitor Console</h1>
+                <p class="brand-sub">Controle central de coleta, validacao e distribuicao de precos</p>
+            </div>
+        </div>
+        <div class="top-actions">
+            <button id="btn-refresh-all" class="btn btn-secondary">Atualizar Painel</button>
+            <button id="btn-follow" class="btn btn-secondary">Seguir Job</button>
+            <a id="btn-download-latest-found" class="btn btn-ghost hidden" href="#" download>Baixar Ultima Planilha</a>
+            <button id="btn-check-functions" type="button" class="btn btn-secondary">Diagnosticar Funcoes</button>
+        </div>
+    </header>
+
+    <section class="hero glass reveal">
+        <div class="hero-copy">
+            <p class="kicker">Visao Executiva</p>
+            <h2>Operacao unica para coleta, auditoria e envio de resultados</h2>
+            <p class="hero-text">
+                Execute jobs manuais, acompanhe o status em tempo real e gerencie configuracoes de integracao
+                em uma interface objetiva, confiavel e pronta para rotina operacional.
+            </p>
+        </div>
+        <div class="chip-row">
+            <span id="chip-api" class="chip chip-pending">API: verificando</span>
+            <span id="chip-job" class="chip chip-pending">Job: -</span>
+            <span id="chip-time" class="chip chip-neutral">--:--:--</span>
+        </div>
+    </section>
+
+    <section class="workspace-layout">
+        <aside class="feature-menu glass reveal">
+            <p class="kicker">Navegacao</p>
+            <h3>Modulos</h3>
+            <p class="panel-note">Fluxo dividido por modulos para reduzir erros e acelerar a operacao diaria.</p>
+            <nav class="feature-menu-list" aria-label="Menu principal do painel">
+                <button type="button" class="feature-menu-btn is-active" data-feature-target="feature-pane-overview" data-feature-label="Resumo">Resumo</button>
+                <button type="button" class="feature-menu-btn" data-feature-target="feature-pane-run" data-feature-label="Execucao Manual">Execucao Manual</button>
+                <button type="button" class="feature-menu-btn" data-feature-target="feature-pane-status" data-feature-label="Status do Job">Status do Job</button>
+                <button type="button" class="feature-menu-btn" data-feature-target="feature-pane-daily" data-feature-label="Agenda Diaria">Agenda Diaria</button>
+                <button type="button" class="feature-menu-btn" data-feature-target="feature-pane-integracoes" data-feature-label="Integracoes">Integracoes</button>
+                <button type="button" class="feature-menu-btn" data-feature-target="feature-pane-admin" data-feature-label="Administracao">Administracao</button>
+                <button type="button" class="feature-menu-btn" data-feature-target="feature-pane-personalizacao" data-feature-label="Personalizacao">Personalizacao</button>
+                <button type="button" class="feature-menu-btn" data-feature-target="feature-pane-eventos" data-feature-label="Eventos">Eventos</button>
+            </nav>
+        </aside>
+
+        <section class="feature-stage">
+            <div class="feature-path glass reveal">
+                <span class="kicker">Contexto</span>
+                <strong id="active-path">Painel / Resumo</strong>
+            </div>
+
+            <section id="feature-pane-overview" class="feature-pane is-active reveal">
+                <section class="kpi-grid">
+                    <article class="kpi-card glass tone-wait">
+                        <p>Em fila</p>
+                        <strong id="kpi-queued">{{ counts.QUEUED }}</strong>
+                    </article>
+                    <article class="kpi-card glass tone-run">
+                        <p>Em execucao</p>
+                        <strong id="kpi-running">{{ counts.RUNNING }}</strong>
+                    </article>
+                    <article class="kpi-card glass tone-done">
+                        <p>Concluidos</p>
+                        <strong id="kpi-done">{{ counts.DONE }}</strong>
+                    </article>
+                    <article class="kpi-card glass tone-fail">
+                        <p>Falhas</p>
+                        <strong id="kpi-failed">{{ counts.FAILED }}</strong>
+                    </article>
+                </section>
+            </section>
+
+            <section id="feature-pane-run" class="feature-pane hidden reveal">
+                <article class="panel glass">
+                    <div class="panel-head">
+                        <p class="kicker">Execucao Manual</p>
+                        <h3>Novo processamento</h3>
+                        <p class="panel-note">Envie uma planilha, configure notificacoes e inicie a coleta com rastreabilidade.</p>
+                    </div>
+
+                    <form id="run-form" class="stack">
+                        <label class="field">
+                            <span>Planilha .xlsx</span>
+                            <input id="file-input" type="file" accept=".xlsx">
+                        </label>
+
+                        <label class="inline-toggle">
+                            <input id="use-default-input" type="checkbox" {% if has_default_input %}checked{% endif %}>
+                            <span>Usar base padrao do servidor quando nenhum arquivo for enviado</span>
+                        </label>
+
+                        <label class="field">
+                            <span>E-mails para envio (separados por virgula)</span>
+                            <input id="email-recipients" type="text" placeholder="exemplo@dominio.com,financeiro@dominio.com">
+                        </label>
+
+                        <label class="field">
+                            <span>Modelo de envio</span>
+                            <select id="output-mode">
+                                <option value="completa">Planilha completa</option>
+                                <option value="a_prazo">Planilha a prazo</option>
+                                <option value="a_vista" disabled>Planilha a vista (desativado)</option>
+                            </select>
+                        </label>
+
+                        <label class="field">
+                            <span>Planilha complementar para anexar no e-mail (.xlsx)</span>
+                            <input id="email-attachment-file" type="file" accept=".xlsx">
+                        </label>
+
+                        <label class="field">
+                            <span>WhatsApp para envio (separados por virgula)</span>
+                            <input id="whatsapp-recipients" type="text" placeholder="+5511999999999, whatsapp:+5511888888888">
+                        </label>
+
+                        <label class="field">
+                            <span>Google Drive Folder ID</span>
+                            <input id="drive-folder-id" type="text" placeholder="1AbCdEfGhIjKlMnOpQrStUvWxYz">
+                        </label>
+
+                        <label class="field">
+                            <span>Arquivo de credenciais Google Drive (.json)</span>
+                            <input id="drive-credentials-file" type="text" placeholder="C:\caminho\service-account.json">
+                        </label>
+
+                        <label class="inline-toggle">
+                            <input id="auto-email-manual" type="checkbox">
+                            <span>Enviar automaticamente ao concluir jobs manuais</span>
+                        </label>
+
+                        <label class="inline-toggle">
+                            <input id="auto-email-daily" type="checkbox">
+                            <span>Enviar automaticamente ao concluir jobs diarios</span>
+                        </label>
+
+                        <label class="inline-toggle">
+                            <input id="auto-whatsapp-manual" type="checkbox">
+                            <span>Enviar automaticamente por WhatsApp ao concluir jobs manuais</span>
+                        </label>
+
+                        <label class="inline-toggle">
+                            <input id="auto-whatsapp-daily" type="checkbox">
+                            <span>Enviar automaticamente por WhatsApp ao concluir jobs diarios</span>
+                        </label>
+
+                        <label class="inline-toggle">
+                            <input id="auto-drive-manual" type="checkbox">
+                            <span>Salvar automaticamente no Google Drive ao concluir jobs manuais</span>
+                        </label>
+
+                        <label class="inline-toggle">
+                            <input id="auto-drive-daily" type="checkbox">
+                            <span>Salvar automaticamente no Google Drive ao concluir jobs diarios</span>
+                        </label>
+
+                        <div class="action-row">
+                            <button id="btn-run" type="submit" class="btn btn-primary">Iniciar Coleta</button>
+                            <button id="btn-save-email-settings" type="button" class="btn btn-secondary">Salvar E-mail</button>
+                            <button id="btn-save-whatsapp-settings" type="button" class="btn btn-secondary">Salvar WhatsApp</button>
+                            <button id="btn-save-drive-settings" type="button" class="btn btn-secondary">Salvar Drive</button>
+                        </div>
+                    </form>
+
+                    <div id="run-feedback" class="feedback"></div>
+                    <a id="btn-download-manual-latest" class="btn btn-ghost hidden" href="#" download>Baixar Ultimo Manual</a>
+                </article>
+            </section>
+
+            <section id="feature-pane-status" class="feature-pane hidden reveal">
+                <article class="panel glass">
+                    <div class="panel-head">
+                        <p class="kicker">Status em tempo real</p>
+                        <h3>Acompanhamento do job</h3>
+                        <p class="panel-note">Atualize o status, interrompa execucoes e envie resultados por e-mail, WhatsApp ou Google Drive sem trocar de tela.</p>
+                    </div>
+
+                    <div class="status-block">
+                        <div class="kv-line">
+                            <span>Job atual</span>
+                            <strong id="current-job">-</strong>
+                        </div>
+                        <div class="kv-line">
+                            <span>Status</span>
+                            <strong id="current-status">-</strong>
+                        </div>
+                        <div class="kv-line">
+                            <span>Erro</span>
+                            <strong id="current-error">-</strong>
+                        </div>
+                        <div class="kv-line">
+                            <span>Criado em</span>
+                            <strong id="current-created">-</strong>
+                        </div>
+                        <div class="kv-line">
+                            <span>Finalizado em</span>
+                            <strong id="current-finished">-</strong>
+                        </div>
+                        <div class="kv-line">
+                            <span>Status de e-mail</span>
+                            <strong id="current-email-status">-</strong>
+                        </div>
+                        <div class="kv-line">
+                            <span>Status de WhatsApp</span>
+                            <strong id="current-whatsapp-status">-</strong>
+                        </div>
+                        <div class="kv-line">
+                            <span>Status de Drive</span>
+                            <strong id="current-drive-status">-</strong>
+                        </div>
+                    </div>
+
+                    <div class="action-row">
+                        <button id="btn-refresh-status" class="btn btn-secondary">Atualizar Status</button>
+                        <button id="btn-stop-run" class="btn btn-secondary">Parar Execucao</button>
+                        <button id="btn-send-email-current" class="btn btn-secondary">Enviar por E-mail</button>
+                        <button id="btn-send-email-latest" class="btn btn-secondary">Enviar Ultimo Disponivel</button>
+                        <button id="btn-send-whatsapp-current" class="btn btn-secondary">Enviar por WhatsApp</button>
+                        <button id="btn-send-whatsapp-latest" class="btn btn-secondary">Enviar WhatsApp Ultimo</button>
+                        <button id="btn-send-drive-current" class="btn btn-secondary">Salvar no Drive</button>
+                        <button id="btn-send-drive-latest" class="btn btn-secondary">Salvar Drive Ultimo</button>
+                        <button id="btn-clear-job" class="btn btn-secondary">Limpar Job</button>
+                    </div>
+
+                    <a id="btn-download-current" class="btn btn-ghost hidden" href="#" download>Baixar Resultado Atual</a>
+                    <a id="btn-open-drive-current" class="btn btn-ghost hidden" href="#" target="_blank" rel="noreferrer">Abrir no Drive</a>
+                </article>
+            </section>
+
+            <section id="feature-pane-daily" class="feature-pane hidden reveal">
+                <article class="panel glass daily-panel">
+                    <div class="panel-head">
+                        <p class="kicker">Agenda diaria</p>
+                        <h3>Automacao programada</h3>
+                        <p class="panel-note">Valide os horarios ativos e ajuste os adicionais como se fossem alarmes da rotina.</p>
+                    </div>
+
+                    <div class="daily-summary-grid">
+                        <article class="daily-summary-card is-primary">
+                            <span class="daily-summary-label">Automacao geral</span>
+                            <strong id="daily-enabled">-</strong>
+                            <small id="daily-run-count">-</small>
+                        </article>
+                        <article class="daily-summary-card">
+                            <span class="daily-summary-label">Proxima execucao</span>
+                            <strong id="daily-next">-</strong>
+                            <small id="daily-next-slot">-</small>
+                        </article>
+                        <article class="daily-summary-card">
+                            <span class="daily-summary-label">Ultimo job diario</span>
+                            <strong id="daily-job">-</strong>
+                            <small id="daily-time">-</small>
+                        </article>
+                    </div>
+
+                    <div class="daily-slots-shell">
+                        <div class="daily-slots-head">
+                            <div>
+                                <p class="kicker">Horarios</p>
+                                <h4 class="daily-slots-title">Controle por horario</h4>
+                            </div>
+                            <span id="daily-extra-summary" class="chip chip-neutral">-</span>
+                        </div>
+                        <div class="stack">
+                            <label class="field">
+                                <span>Novo horario (HH:MM)</span>
+                                <input id="daily-new-time" type="time" step="60" placeholder="ex.: 09:30">
+                            </label>
+                            <button id="btn-daily-add-time" type="button" class="btn btn-secondary">Adicionar horario</button>
+                        </div>
+
+                        <div id="daily-slots" class="daily-slots-list"></div>
+                    </div>
+
+                    <a id="btn-download-daily" class="btn btn-ghost hidden" href="#" download>Baixar Ultima Diaria</a>
+                </article>
+            </section>
+
+            <section id="feature-pane-integracoes" class="feature-pane hidden reveal">
+                <article class="panel glass">
+                    <div class="panel-head">
+                        <p class="kicker">Integracoes</p>
+                        <h3>Credenciais de API</h3>
+                        <p class="panel-note">Gerencie credenciais da Magalu com status de preenchimento por campo.</p>
+                    </div>
+
+                    <div class="tab-strip" role="tablist" aria-label="Credenciais marketplace">
+                        <button id="tab-trigger-magalu" type="button" class="tab-btn is-active" data-tab-target="tab-pane-magalu">Magalu</button>
+                    </div>
+
+                    <section id="tab-pane-magalu" class="tab-pane is-active">
+                        <div class="chip-row">
+                            <span id="magalu-flag-api-key" class="chip chip-pending">API Key: pendente</span>
+                            <span id="magalu-flag-api-key-id" class="chip chip-pending">Key ID: pendente</span>
+                            <span id="magalu-flag-api-key-secret" class="chip chip-pending">Key Secret: pendente</span>
+                            <span id="magalu-flag-access-token" class="chip chip-pending">Access Token: pendente</span>
+                            <span id="magalu-flag-refresh-token" class="chip chip-pending">Refresh Token: pendente</span>
+                        </div>
+
+                        <div class="stack">
+                            <label class="field">
+                                <span>Magalu API Key</span>
+                                <input id="magalu-api-key" type="password" autocomplete="new-password" placeholder="Nao configurado">
+                            </label>
+                            <label class="field">
+                                <span>Magalu API Key ID</span>
+                                <input id="magalu-api-key-id" type="password" autocomplete="new-password" placeholder="Nao configurado">
+                            </label>
+                            <label class="field">
+                                <span>Magalu API Key Secret</span>
+                                <input id="magalu-api-key-secret" type="password" autocomplete="new-password" placeholder="Nao configurado">
+                            </label>
+                            <label class="field">
+                                <span>Magalu Access Token</span>
+                                <input id="magalu-access-token" type="password" autocomplete="new-password" placeholder="Nao configurado">
+                            </label>
+                            <label class="field">
+                                <span>Magalu Refresh Token</span>
+                                <input id="magalu-refresh-token" type="password" autocomplete="new-password" placeholder="Nao configurado">
+                            </label>
+                            <label class="field">
+                                <span>Magalu API Base</span>
+                                <input id="magalu-api-base" type="text" placeholder="https://api.magalu.com">
+                            </label>
+                            <label class="field">
+                                <span>Magalu Token URL</span>
+                                <input id="magalu-token-url" type="text" placeholder="https://id.magalu.com/oauth/token">
+                            </label>
+                            <label class="field">
+                                <span>Magalu Prices Path</span>
+                                <input id="magalu-prices-path" type="text" placeholder="/seller/v1/portfolios/prices/{sku}">
+                            </label>
+                            <label class="field">
+                                <span>Magalu Seller ID</span>
+                                <input id="magalu-seller-id" type="text" placeholder="Opcional">
+                            </label>
+                            <label class="field">
+                                <span>Magalu Redirect URI (opcional custom)</span>
+                                <input id="magalu-redirect-uri" type="text" placeholder="Se vazio, o sistema gera automaticamente">
+                            </label>
+                            <label class="field">
+                                <span>URL de retorno gerada pelo sistema</span>
+                                <input id="magalu-generated-return-url" type="text" readonly>
+                            </label>
+                            <label class="field">
+                                <span>Magalu OAuth Scope</span>
+                                <input id="magalu-auth-scope" type="text" placeholder="openid profile email">
+                            </label>
+                        </div>
+
+                        <div class="action-row">
+                            <button id="btn-save-magalu-credentials" type="button" class="btn btn-secondary">Salvar Credenciais</button>
+                            <a id="magalu-auth-url" class="btn btn-ghost hidden" href="#" target="_blank" rel="noopener">Abrir Autorizacao Magalu</a>
+                        </div>
+                    </section>
+
+                </article>
+            </section>
+
+            <section id="feature-pane-admin" class="feature-pane hidden reveal">
+                <article class="panel glass">
+                    <div class="panel-head">
+                        <p class="kicker">Administracao</p>
+                        <h3>Gestao de usuarios</h3>
+                        <p class="panel-note">Autentique como admin para criar, editar e remover usuarios da plataforma.</p>
+                    </div>
+
+                    <div class="admin-grid">
+                        <section class="admin-card">
+                            <p class="kicker">Sessao</p>
+                            <div class="status-block">
+                                <div class="kv-line">
+                                    <span>Status da sessao</span>
+                                    <strong id="admin-session-status">Desconectado</strong>
+                                </div>
+                                <div class="kv-line">
+                                    <span>Usuario atual</span>
+                                    <strong id="admin-current-user">-</strong>
+                                </div>
+                                <div class="kv-line">
+                                    <span>Papel</span>
+                                    <strong id="admin-current-role">-</strong>
+                                </div>
+                            </div>
+
+                            <div class="stack">
+                                <label class="field">
+                                    <span>Usuario admin</span>
+                                    <input id="admin-login-username" type="text" value="admin" autocomplete="username">
+                                </label>
+                                <label class="field">
+                                    <span>Senha admin</span>
+                                    <input id="admin-login-password" type="password" value="admin123" autocomplete="current-password">
+                                </label>
+                            </div>
+
+                            <div class="action-row">
+                                <button id="btn-admin-login" type="button" class="btn btn-secondary">Entrar</button>
+                                <button id="btn-admin-logout" type="button" class="btn btn-secondary">Sair</button>
+                                <button id="btn-admin-refresh-users" type="button" class="btn btn-ghost">Atualizar Usuarios</button>
+                            </div>
+                        </section>
+
+                        <section class="admin-card">
+                            <p class="kicker">Cadastro</p>
+                            <div class="stack">
+                                <label class="field">
+                                    <span>Novo usuario</span>
+                                    <input id="admin-new-username" type="text" placeholder="usuario_operacao">
+                                </label>
+                                <label class="field">
+                                    <span>Nome completo</span>
+                                    <input id="admin-new-full-name" type="text" placeholder="Nome do usuario">
+                                </label>
+                                <label class="field">
+                                    <span>Senha inicial</span>
+                                    <input id="admin-new-password" type="password" placeholder="Minimo 6 caracteres">
+                                </label>
+                                <label class="field">
+                                    <span>Perfil</span>
+                                    <select id="admin-new-role">
+                                        <option value="operator">Operator</option>
+                                        <option value="admin">Admin</option>
+                                    </select>
+                                </label>
+                                <label class="inline-toggle">
+                                    <input id="admin-new-active" type="checkbox" checked>
+                                    <span>Usuario ativo</span>
+                                </label>
+                            </div>
+                            <div class="action-row">
+                                <button id="btn-admin-create-user" type="button" class="btn btn-primary">Criar Usuario</button>
+                            </div>
+                        </section>
+                    </div>
+
+                    <div id="admin-feedback" class="feedback"></div>
+
+                    <div class="table-wrap admin-table-wrap">
+                        <table class="results-table admin-users-table">
+                            <thead>
+                                <tr>
+                                    <th>Usuario</th>
+                                    <th>Nome</th>
+                                    <th>Perfil</th>
+                                    <th>Status</th>
+                                    <th>Criado em</th>
+                                    <th>Atualizado em</th>
+                                    <th>Acoes</th>
+                                </tr>
+                            </thead>
+                            <tbody id="admin-users-body">
+                                <tr>
+                                    <td colspan="7">Nenhum usuario carregado.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </article>
+            </section>
+
+            <section id="feature-pane-personalizacao" class="feature-pane hidden reveal">
+                <article class="panel glass">
+                    <div class="panel-head">
+                        <p class="kicker">Personalizacao</p>
+                        <h3>Ajustes de visualizacao</h3>
+                        <p class="panel-note">Defina tema, densidade e escala conforme a necessidade do seu time.</p>
+                    </div>
+
+                    <div class="stack">
+                        <label class="field">
+                            <span>Tema</span>
+                            <select id="theme-select">
+                                <option value="apple">Classic Light</option>
+                                <option value="graphite">Graphite</option>
+                                <option value="ocean">Ocean</option>
+                            </select>
+                        </label>
+                        <label class="field">
+                            <span>Densidade</span>
+                            <select id="density-select">
+                                <option value="comfortable">Confortavel</option>
+                                <option value="compact">Compacto</option>
+                                <option value="spacious">Espacoso</option>
+                            </select>
+                        </label>
+                        <label class="field">
+                            <span>Escala visual</span>
+                            <input id="contrast-range" type="range" min="0.9" max="1.2" step="0.05" value="1">
+                        </label>
+                    </div>
+                </article>
+            </section>
+
+            <section id="feature-pane-eventos" class="feature-pane hidden reveal">
+                <section class="panel glass timeline-panel">
+                    <div class="panel-head">
+                        <p class="kicker">Eventos</p>
+                        <h3>Linha do tempo operacional</h3>
+                        <p class="panel-note">Historico recente para auditoria de incidentes e rastreio de execucoes.</p>
+                    </div>
+                    <ul id="timeline" class="timeline"></ul>
+                </section>
+            </section>
+        </section>
+    </section>
+
+    <footer class="foot-note">
+        Price Monitor Console - governanca operacional para coleta de precos.
+    </footer>
+</main>
+
+<script>
+window.APP_CONFIG = {
+    apiBase: "http://127.0.0.1:8000",
+    apiToken: ""
+};
+window.PRICE_MONITOR_BOOTSTRAP = {
+    hasDefaultInput: false,
+    initialCounts: { "QUEUED": 0, "RUNNING": 0, "DONE": 0, "FAILED": 0 },
+    apiToken: window.APP_CONFIG.apiToken,
+    apiBase: window.APP_CONFIG.apiBase
+};
+</script>
+<script src="/static/app.js"></script>
+</body>
+</html>
+

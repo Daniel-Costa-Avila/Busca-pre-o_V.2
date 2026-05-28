@@ -1,0 +1,16 @@
+<svg width="128" height="128" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="pmGradient" x1="16" y1="14" x2="110" y2="114" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#2F80ED"/>
+      <stop offset="1" stop-color="#0B5FC9"/>
+    </linearGradient>
+    <radialGradient id="pmGlow" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(47 30) rotate(36) scale(76 74)">
+      <stop stop-color="white" stop-opacity="0.3"/>
+      <stop offset="1" stop-color="white" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect x="8" y="8" width="112" height="112" rx="30" fill="url(#pmGradient)"/>
+  <rect x="8" y="8" width="112" height="112" rx="30" fill="url(#pmGlow)"/>
+  <rect x="8.5" y="8.5" width="111" height="111" rx="29.5" stroke="#CFE4FF" stroke-opacity="0.45"/>
+  <text x="64" y="76" text-anchor="middle" font-family="SF Pro Display, Manrope, Segoe UI, sans-serif" font-size="42" font-weight="760" fill="white" letter-spacing="-2">PM</text>
+</svg>

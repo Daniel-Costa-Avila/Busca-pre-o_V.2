@@ -1,0 +1,33 @@
+{# Sidebar = navegacao real, separada do conteudo. Os botoes preservam data-feature-target usados no app.js. #}
+<aside class="feature-menu glass reveal sidebar" aria-label="Navegacao principal">
+    <p class="kicker">Navegacao</p>
+    <h3>Modulos</h3>
+    <p class="panel-note">Acesso rapido por contexto (operacao, automacao, integracoes e administracao).</p>
+
+    <nav class="feature-menu-list" aria-label="Lista de modulos">
+        <div class="nav-group">
+            <p class="nav-group-title">Operacao</p>
+            <button type="button" class="feature-menu-btn is-active" data-feature-target="feature-pane-overview" data-feature-label="Resumo">Resumo</button>
+            <button type="button" class="feature-menu-btn" data-feature-target="feature-pane-run" data-feature-label="Execucao Manual">Execucao manual</button>
+            <button type="button" class="feature-menu-btn" data-feature-target="feature-pane-status" data-feature-label="Status do Job">Status do job</button>
+        </div>
+
+        <div class="nav-group">
+            <p class="nav-group-title">Automacao</p>
+            <button type="button" class="feature-menu-btn" data-feature-target="feature-pane-daily" data-feature-label="Agenda Diaria">Agenda diaria</button>
+        </div>
+
+        <div class="nav-group">
+            <p class="nav-group-title">Integracoes</p>
+            <button type="button" class="feature-menu-btn" data-feature-target="feature-pane-integracoes" data-feature-label="Integracoes">Integracoes</button>
+        </div>
+
+        <div class="nav-group">
+            <p class="nav-group-title">Governanca</p>
+            <button type="button" class="feature-menu-btn" data-feature-target="feature-pane-admin" data-feature-label="Administracao">Administracao</button>
+            <button type="button" class="feature-menu-btn" data-feature-target="feature-pane-personalizacao" data-feature-label="Personalizacao">Personalizacao</button>
+            <button type="button" class="feature-menu-btn" data-feature-target="feature-pane-eventos" data-feature-label="Eventos">Eventos</button>
+        </div>
+    </nav>
+</aside>
+

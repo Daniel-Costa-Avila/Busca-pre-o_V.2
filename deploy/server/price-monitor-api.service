@@ -1,0 +1,19 @@
+[Unit]
+Description=Price Monitor API
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=price-monitor
+Group=price-monitor
+WorkingDirectory=/opt/price-monitor
+Environment=HOME=/opt/price-monitor
+EnvironmentFile=/opt/price-monitor/deploy/server/server.env
+ExecStart=/bin/bash /opt/price-monitor/deploy/server/start_api.sh
+Restart=always
+RestartSec=5
+TimeoutStopSec=20
+
+[Install]
+WantedBy=multi-user.target

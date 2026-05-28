@@ -1,0 +1,17 @@
+pandas
+selenium
+openpyxl
+webdriver-manager
+openai
+playwright
+requests
+fastapi
+uvicorn
+jinja2
+python-multipart
+streamlit
+tenacity
+pydantic-settings
+pandera
+google-api-python-client
+google-auth

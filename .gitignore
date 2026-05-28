@@ -1,0 +1,32 @@
+.env
+
+# Python / virtualenv
+.venv/
+.venv.bak_*/
+__pycache__/
+*.pyc
+
+# Runtime outputs and logs
+runs/
+debug_magalu/
+App/logs/
+run_status.txt
+
+# Local browser profiles / automation state
+chrome_profile_magalu/
+chrome_profile_mercadolivre/
+.selenium/
+
+# Local credentials and secrets
+creds/
+*.key
+*.pem
+
+# Local spreadsheets generated or used in operation
+input.xlsx
+output.xlsx
+Resultado Diario/
+Resultado Manual/
+Planilha diaria/
+Planilha diaria Cotia/
+Ativação Manual/

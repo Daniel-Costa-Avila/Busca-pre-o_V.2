@@ -1,0 +1,28 @@
+{# Header = controle global. Mantemos os IDs usados no app.js (refresh/follow/diagnostico/download). #}
+<header class="topbar glass reveal global-header">
+    <div class="brand-wrap">
+        <div class="brand-mark" aria-hidden="true">
+            <img src="/static/company-logo.svg" alt="Logo da empresa" class="brand-logo">
+        </div>
+        <div class="brand-text">
+            <p class="kicker">Operacoes</p>
+            <h1>Price Monitor Console</h1>
+            <p class="brand-sub">Controle central de coleta, validacao e distribuicao de precos</p>
+            <p class="auto-update-banner"><span class="auto-update-icon" aria-hidden="true">!</span>Atualiza automaticamente todos os dias às <strong>06:00</strong> da manhã (horário de Brasília).</p>
+        </div>
+    </div>
+
+    <div class="top-actions global-actions" aria-label="Acoes globais do painel">
+        <div class="global-actions-row global-actions-primary" aria-label="Acoes principais">
+            {# CTA principal: leva direto ao modulo de Execucao Manual (sem misturar com a sidebar). #}
+            <button id="btn-open-run-pane" type="button" class="btn btn-primary">Nova coleta</button>
+            <button id="btn-open-status-pane" type="button" class="btn btn-secondary">Status do job</button>
+            <button id="btn-refresh-all" type="button" class="btn btn-secondary">Atualizar painel</button>
+        </div>
+        <div class="global-actions-row global-actions-secondary" aria-label="Acoes secundarias">
+            <button id="btn-follow" type="button" class="btn btn-ghost">Seguir job</button>
+            <a id="btn-download-latest-found" class="btn btn-ghost hidden" href="#" download>Baixar ultima planilha</a>
+            <button id="btn-check-functions" type="button" class="btn btn-secondary">Diagnosticar funcoes</button>
+        </div>
+    </div>
+</header>

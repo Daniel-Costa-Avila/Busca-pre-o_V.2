@@ -1,0 +1,15 @@
+2026/03/02-11:31:02.532 efc Reusing MANIFEST C:\Users\daniel.avila\Desktop\AGENTE_DE_PRECOS\App\chrome_profile\Default\Session Storage/MANIFEST-000001
+2026/03/02-11:31:02.627 efc Recovering log #71
+2026/03/02-11:31:02.645 efc Reusing old log C:\Users\daniel.avila\Desktop\AGENTE_DE_PRECOS\App\chrome_profile\Default\Session Storage/000071.log 
+2026/03/02-11:32:43.589 4628 Level-0 table #75: started
+2026/03/02-11:32:43.625 4628 Level-0 table #75: 11581 bytes OK
+2026/03/02-11:32:43.629 4628 Delete type=0 #71
+2026/03/02-11:32:43.631 4628 Compacting 4@0 + 1@1 files
+2026/03/02-11:32:43.661 4628 Generated table #76@0: 1272 keys, 29582 bytes
+2026/03/02-11:32:43.661 4628 Compacted 4@0 + 1@1 files => 29582 bytes
+2026/03/02-11:32:43.663 4628 compacted to: files[ 0 1 1 0 0 0 0 ]
+2026/03/02-11:32:43.664 4628 Delete type=2 #63
+2026/03/02-11:32:43.665 4628 Delete type=2 #66
+2026/03/02-11:32:43.665 4628 Delete type=2 #69
+2026/03/02-11:32:43.665 4628 Delete type=2 #72
+2026/03/02-11:32:43.665 4628 Delete type=2 #75
