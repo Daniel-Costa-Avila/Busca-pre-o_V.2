@@ -34,6 +34,7 @@
 
     const runForm = document.getElementById("run-form");
     const fileInput = document.getElementById("file-input");
+    const fileInputStatus = document.getElementById("file-input-status");
     const useDefaultInput = document.getElementById("use-default-input");
     const btnDownloadInputExample = document.getElementById("btn-download-input-example");
     const emailRecipients = document.getElementById("email-recipients");
@@ -185,6 +186,19 @@
         if (!dailyFeedback) return;
         dailyFeedback.textContent = text || "";
         dailyFeedback.style.color = kind === "error" ? "#dc2626" : kind === "success" ? "#0f9f6e" : "#637082";
+    }
+
+    function updateFileInputStatus() {
+        if (!fileInputStatus) return;
+        if (useDefaultInput && useDefaultInput.checked) {
+            fileInputStatus.textContent = "Base padrao selecionada. O arquivo e opcional.";
+            return;
+        }
+        if (fileInput && fileInput.files && fileInput.files.length > 0) {
+            fileInputStatus.textContent = `Arquivo selecionado: ${fileInput.files[0].name}`;
+            return;
+        }
+        fileInputStatus.textContent = "Nenhum arquivo selecionado.";
     }
 
     function fmtTs(value) {
@@ -1703,6 +1717,12 @@
         if (runForm) {
             runForm.addEventListener("submit", startRun);
         }
+        if (fileInput) {
+            fileInput.addEventListener("change", updateFileInputStatus);
+        }
+        if (useDefaultInput) {
+            useDefaultInput.addEventListener("change", updateFileInputStatus);
+        }
         if (btnRefreshAll) {
             btnRefreshAll.addEventListener("click", refreshAll);
         }
@@ -1798,6 +1818,7 @@
         if (dailyFeedback && btnDailyAddTime && dailyNewTime) {
             setDailyFeedback("Pronto para adicionar horarios.", "info");
         }
+        updateFileInputStatus();
         window.addEventListener("beforeunload", closeRealtimeEvents);
         updateTimeChip();
         setInterval(updateTimeChip, 1000);

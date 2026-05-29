@@ -934,6 +934,8 @@ def _job_payload(job: Job | None) -> dict | None:
         "drive_file_id": job.drive_file_id,
         "drive_file_url": job.drive_file_url,
         "output_available": output_available,
+        "status_url": f"/status/{job.job_id}",
+        "download_url": f"/download/{job.job_id}" if output_available else "",
         "auto_email_enabled": job.auto_email_enabled,
         "auto_whatsapp_enabled": job.auto_whatsapp_enabled,
         "auto_drive_enabled": job.auto_drive_enabled,

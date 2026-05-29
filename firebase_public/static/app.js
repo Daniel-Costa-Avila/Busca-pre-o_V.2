@@ -31,6 +31,7 @@
 
     const runForm = document.getElementById("run-form");
     const fileInput = document.getElementById("file-input");
+    const fileInputStatus = document.getElementById("file-input-status");
     const useDefaultInput = document.getElementById("use-default-input");
     const emailRecipients = document.getElementById("email-recipients");
     const outputMode = document.getElementById("output-mode");
@@ -160,6 +161,19 @@
     function setFeedback(text, kind) {
         runFeedback.textContent = text || "";
         runFeedback.style.color = kind === "error" ? "#dc2626" : kind === "success" ? "#0f9f6e" : "#637082";
+    }
+
+    function updateFileInputStatus() {
+        if (!fileInputStatus) return;
+        if (useDefaultInput && useDefaultInput.checked) {
+            fileInputStatus.textContent = "Base padrao selecionada. O arquivo e opcional.";
+            return;
+        }
+        if (fileInput && fileInput.files && fileInput.files.length > 0) {
+            fileInputStatus.textContent = `Arquivo selecionado: ${fileInput.files[0].name}`;
+            return;
+        }
+        fileInputStatus.textContent = "Nenhum arquivo selecionado.";
     }
 
     function fmtTs(value) {
@@ -1614,6 +1628,12 @@
 
     function bindEvents() {
         runForm.addEventListener("submit", startRun);
+        if (fileInput) {
+            fileInput.addEventListener("change", updateFileInputStatus);
+        }
+        if (useDefaultInput) {
+            useDefaultInput.addEventListener("change", updateFileInputStatus);
+        }
         btnRefreshAll.addEventListener("click", refreshAll);
         btnRefreshStatus.addEventListener("click", refreshStatus);
         btnStopRun.addEventListener("click", stopRunningJob);
@@ -1679,6 +1699,7 @@
         bindMarketplaceTabs();
         syncAdminSessionUi();
         bindEvents();
+        updateFileInputStatus();
         window.addEventListener("beforeunload", closeRealtimeEvents);
         updateClock();
         setInterval(updateClock, 1000);

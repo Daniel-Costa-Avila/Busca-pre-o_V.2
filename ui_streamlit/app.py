@@ -483,16 +483,38 @@ def _render_shell_css() -> None:
             padding: 0.6rem 0.9rem !important;
             border: 1px solid rgba(148, 163, 184, 0.24) !important;
             box-shadow: var(--shadow-inner) !important;
+            color: #0f172a !important;
+            background: linear-gradient(180deg, #ffffff 0%, #f1f5f9 100%) !important;
         }
         .stButton > button[kind="primary"] {
-            background: var(--btn-grad) !important;
-            border: none !important;
+            background: linear-gradient(135deg, #2563eb 0%, #0ea5e9 100%) !important;
+            border: 1px solid rgba(37, 99, 235, 0.35) !important;
             color: white !important;
             box-shadow: 0 16px 34px rgba(59, 130, 246, 0.28) !important;
         }
         .stButton > button[kind="secondary"] {
-            background: rgba(15, 23, 42, 0.62) !important;
-            color: var(--ink) !important;
+            background: linear-gradient(180deg, #ffffff 0%, #e5e7eb 100%) !important;
+            color: #0f172a !important;
+        }
+        .stButton > button[aria-label*="Executar"] {
+            background: linear-gradient(135deg, #2563eb 0%, #0ea5e9 100%) !important;
+            border-color: rgba(37, 99, 235, 0.35) !important;
+            color: #ffffff !important;
+        }
+        .stButton > button[aria-label*="Baixar"] {
+            background: linear-gradient(135deg, #16a34a 0%, #22c55e 100%) !important;
+            border-color: rgba(22, 163, 74, 0.35) !important;
+            color: #ffffff !important;
+        }
+        .stButton > button[aria-label*="Atualizar"] {
+            background: linear-gradient(135deg, #0891b2 0%, #06b6d4 100%) !important;
+            border-color: rgba(8, 145, 178, 0.35) !important;
+            color: #ffffff !important;
+        }
+        .stButton > button[aria-label*="Parar"] {
+            background: linear-gradient(135deg, #dc2626 0%, #f97316 100%) !important;
+            border-color: rgba(220, 38, 38, 0.35) !important;
+            color: #ffffff !important;
         }
         .stButton > button:hover { filter: brightness(1.04); }
         .stButton > button:focus { box-shadow: var(--ring-strong) !important; }
@@ -619,6 +641,388 @@ def _render_shell_css() -> None:
             color: rgba(255, 255, 255, 0.94);
             flex: 0 0 auto;
             box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+        }
+
+        /* Redesign visual: limpo, profissional e com hierarquia clara */
+        :root {
+            --font-display: Arial, sans-serif !important;
+            --font-body: Arial, sans-serif !important;
+            --bg-base: #f6f8fb !important;
+            --bg-muted: #eef2f7 !important;
+            --surface: #ffffff !important;
+            --surface-strong: #ffffff !important;
+            --ink: #101828 !important;
+            --muted: #475467 !important;
+            --line-soft: #e4e7ec !important;
+            --line: #d0d5dd !important;
+            --radius-lg: 18px !important;
+            --radius-md: 14px !important;
+            --radius-sm: 10px !important;
+            --shadow-card: 0 8px 24px rgba(16, 24, 40, 0.06) !important;
+            --shadow-inner: inset 0 1px 0 rgba(255, 255, 255, 0.92) !important;
+        }
+
+        html, body, [data-testid="stAppViewContainer"] {
+            font-family: Arial, sans-serif !important;
+            color: var(--ink) !important;
+            background: linear-gradient(180deg, var(--bg-base) 0%, var(--bg-muted) 100%) !important;
+        }
+        [data-testid="stAppViewContainer"]::after {
+            display: none !important;
+        }
+        [data-testid="stAppViewContainer"] * {
+            font-family: Arial, sans-serif !important;
+        }
+        .block-container {
+            max-width: 1340px !important;
+            padding-top: 0.8rem !important;
+            padding-left: 1rem !important;
+            padding-right: 1rem !important;
+            margin: 0 auto !important;
+        }
+
+        .pm-topbar,
+        .pm-pathbar,
+        .pm-panel,
+        .pm-sidebar,
+        .pm-kpi,
+        .pm-card {
+            background: #ffffff !important;
+            border-color: var(--line-soft) !important;
+            box-shadow: var(--shadow-card) !important;
+        }
+
+        .pm-topbar {
+            padding: 16px 18px !important;
+            border-radius: 18px !important;
+        }
+        .pm-brand .pm-title {
+            font-size: 1.28rem !important;
+            font-weight: 700 !important;
+            letter-spacing: -0.01em !important;
+        }
+        .pm-sub {
+            color: var(--muted) !important;
+        }
+
+        .pm-kpi p {
+            color: #344054 !important;
+            font-size: 0.76rem !important;
+        }
+        .pm-kpi strong {
+            color: #101828 !important;
+            font-size: 2.1rem !important;
+        }
+        .pm-tone-wait::before,
+        .pm-tone-run::before,
+        .pm-tone-done::before,
+        .pm-tone-fail::before,
+        .pm-kpi::after,
+        .pm-card::after {
+            display: none !important;
+        }
+
+        .pm-nav-title,
+        .pm-kicker {
+            color: #667085 !important;
+            font-weight: 700 !important;
+        }
+        .pm-pathbar strong,
+        .pm-card-title {
+            color: #101828 !important;
+            letter-spacing: -0.01em !important;
+        }
+
+        .pm-kv {
+            background: #f9fafb !important;
+            border: 1px solid #eaecf0 !important;
+            border-radius: 10px !important;
+        }
+        .pm-kv span:first-child,
+        .pm-mono {
+            color: #344054 !important;
+        }
+        .pm-badge {
+            background: #f2f4f7 !important;
+            border-color: #d0d5dd !important;
+            color: #344054 !important;
+        }
+        .pm-badge-ok {
+            background: #ecfdf3 !important;
+            border-color: #abefc6 !important;
+            color: #067647 !important;
+        }
+        .pm-badge-warn {
+            background: #fffaeb !important;
+            border-color: #fedf89 !important;
+            color: #b54708 !important;
+        }
+        .pm-badge-bad {
+            background: #fef3f2 !important;
+            border-color: #fecdca !important;
+            color: #b42318 !important;
+        }
+        .pm-badge-info {
+            background: #eff8ff !important;
+            border-color: #b2ddff !important;
+            color: #175cd3 !important;
+        }
+
+        .pm-sidebar [data-testid="stButton"] button {
+            justify-content: flex-start !important;
+            border-radius: 12px !important;
+            border: 1px solid #d0d5dd !important;
+            background: #ffffff !important;
+            color: #101828 !important;
+            box-shadow: none !important;
+        }
+        .pm-sidebar [data-testid="stButton"] button[kind="primary"] {
+            background: linear-gradient(135deg, #2563eb 0%, #0ea5e9 100%) !important;
+            border-color: rgba(37, 99, 235, 0.34) !important;
+            color: #ffffff !important;
+            box-shadow: 0 8px 20px rgba(37, 99, 235, 0.28) !important;
+        }
+
+        .stButton > button {
+            border-radius: 12px !important;
+            font-weight: 600 !important;
+        }
+        .stButton > button[aria-label*="Executar"] {
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%) !important;
+            border-color: rgba(37, 99, 235, 0.38) !important;
+            color: #ffffff !important;
+        }
+        .stButton > button[aria-label*="Baixar"] {
+            background: linear-gradient(135deg, #16a34a 0%, #15803d 100%) !important;
+            border-color: rgba(22, 163, 74, 0.38) !important;
+            color: #ffffff !important;
+        }
+        .stButton > button[aria-label*="Atualizar"] {
+            background: linear-gradient(135deg, #0891b2 0%, #0e7490 100%) !important;
+            border-color: rgba(8, 145, 178, 0.38) !important;
+            color: #ffffff !important;
+        }
+        .stButton > button[aria-label*="Parar"] {
+            background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%) !important;
+            border-color: rgba(220, 38, 38, 0.38) !important;
+            color: #ffffff !important;
+        }
+
+        .pm-auto-banner {
+            border-radius: 16px !important;
+            border: 1px solid #bfdbfe !important;
+            background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 55%, #bfdbfe 100%) !important;
+            box-shadow: 0 10px 24px rgba(37, 99, 235, 0.12) !important;
+        }
+        .pm-auto-banner__title {
+            color: #1d4ed8 !important;
+        }
+        .pm-auto-banner__subtitle {
+            color: #1e3a8a !important;
+        }
+        .pm-auto-banner__time,
+        .pm-auto-banner__icon {
+            background: linear-gradient(135deg, #2563eb 0%, #0ea5e9 100%) !important;
+            color: #ffffff !important;
+            border-color: rgba(37, 99, 235, 0.35) !important;
+        }
+
+        /* Bloco de execução manual: melhorar contraste e legibilidade */
+        [data-testid="stExpander"] details {
+            border: 1px solid #e4e7ec !important;
+            border-radius: 12px !important;
+            background: #ffffff !important;
+        }
+        [data-testid="stExpander"] details summary::-webkit-details-marker {
+            display: none !important;
+        }
+        [data-testid="stExpander"] summary {
+            position: relative !important;
+            padding-left: 2rem !important;
+            background: #ffffff !important;
+            color: #101828 !important;
+        }
+        [data-testid="stExpander"] summary::before {
+            content: "▸";
+            position: absolute;
+            left: 0.75rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #475467;
+            font-size: 0.95rem;
+            line-height: 1;
+        }
+        [data-testid="stExpander"] details[open] summary::before {
+            content: "▾";
+        }
+        [data-testid="stExpanderToggleIcon"] {
+            display: none !important;
+        }
+        [data-testid="stExpander"] summary p {
+            color: #101828 !important;
+            font-weight: 600 !important;
+            margin: 0 !important;
+        }
+
+        [data-testid="stFileUploaderDropzone"] {
+            background: #f8fafc !important;
+            border: 1px solid #d0d5dd !important;
+            color: #344054 !important;
+        }
+        [data-testid="stFileUploaderDropzone"] * {
+            color: #344054 !important;
+        }
+        [data-testid="stFileUploaderDropzone"] button {
+            min-width: 132px !important;
+            border-radius: 10px !important;
+            border: 1px solid #1d4ed8 !important;
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%) !important;
+            color: #ffffff !important;
+            font-weight: 700 !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            box-shadow: none !important;
+        }
+        [data-testid="stFileUploaderDropzone"] button:hover {
+            filter: brightness(1.04) !important;
+        }
+        [data-testid="stFileUploaderDropzone"] button p,
+        [data-testid="stFileUploaderDropzone"] button span {
+            color: #ffffff !important;
+            margin: 0 !important;
+            line-height: 1.2 !important;
+        }
+        [data-testid="stFileUploaderDropzone"] small,
+        [data-testid="stFileUploaderDropzone"] [data-testid="stCaptionContainer"],
+        [data-testid="stFileUploaderDropzone"] [data-testid="stMarkdownContainer"] p {
+            color: #1f2937 !important;
+            opacity: 1 !important;
+        }
+
+        [data-testid="stCheckbox"] label,
+        [data-testid="stCheckbox"] span {
+            color: #344054 !important;
+            opacity: 1 !important;
+        }
+        [data-testid="stCheckbox"] p {
+            color: #344054 !important;
+            opacity: 1 !important;
+            font-weight: 600 !important;
+        }
+
+        .stButton > button:disabled {
+            background: #eaecf0 !important;
+            border-color: #d0d5dd !important;
+            color: #98a2b3 !important;
+            opacity: 1 !important;
+            box-shadow: none !important;
+        }
+        .stDownloadButton > button,
+        [data-testid="stDownloadButton"] > button {
+            border-radius: 12px !important;
+            border: 1px solid rgba(22, 163, 74, 0.38) !important;
+            background: linear-gradient(135deg, #16a34a 0%, #15803d 100%) !important;
+            color: #ffffff !important;
+            font-weight: 600 !important;
+            box-shadow: 0 10px 24px rgba(22, 163, 74, 0.24) !important;
+        }
+        .stDownloadButton > button:disabled,
+        [data-testid="stDownloadButton"] > button:disabled {
+            background: #eaecf0 !important;
+            border-color: #d0d5dd !important;
+            color: #98a2b3 !important;
+            box-shadow: none !important;
+        }
+
+        /* Correcao final da tela "Manual de Execucao" */
+        [data-testid="stButton"] > button {
+            color: #0f172a !important;
+            background: linear-gradient(180deg, #ffffff 0%, #eef2f7 100%) !important;
+            border: 1px solid #cbd5e1 !important;
+        }
+        [data-testid="stButton"] > button[aria-label*="Executar com base cadastrada"] {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%) !important;
+            border-color: rgba(220, 38, 38, 0.36) !important;
+            color: #ffffff !important;
+        }
+        [data-testid="stButton"] > button[aria-label*="Executar com sua planilha"] {
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%) !important;
+            border-color: rgba(37, 99, 235, 0.36) !important;
+            color: #ffffff !important;
+        }
+        [data-testid="stButton"] > button:disabled,
+        [data-testid="stButton"] > button[aria-label*="Executar com sua planilha"]:disabled,
+        [data-testid="stButton"] > button[aria-label*="Executar com base cadastrada"]:disabled {
+            background: #e5e7eb !important;
+            border-color: #cbd5e1 !important;
+            color: #667085 !important;
+            text-shadow: none !important;
+            opacity: 1 !important;
+            box-shadow: none !important;
+        }
+
+        [data-testid="stDownloadButton"] > button {
+            background: linear-gradient(135deg, #16a34a 0%, #15803d 100%) !important;
+            border-color: rgba(22, 163, 74, 0.36) !important;
+            color: #ffffff !important;
+        }
+        [data-testid="stDownloadButton"] > button:disabled {
+            background: #e5e7eb !important;
+            border-color: #cbd5e1 !important;
+            color: #667085 !important;
+            opacity: 1 !important;
+        }
+
+        /* Funnel: correcao definitiva do uploader (evita "uploadcarregar" sobreposto) */
+        [data-testid="stFileUploader"] [data-testid="stFileUploaderDropzone"] button {
+            position: relative !important;
+            min-width: 156px !important;
+            height: 36px !important;
+            padding: 0 14px !important;
+            border-radius: 10px !important;
+            border: 1px solid #1d4ed8 !important;
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%) !important;
+            box-shadow: none !important;
+            color: transparent !important;
+            overflow: hidden !important;
+        }
+        [data-testid="stFileUploader"] [data-testid="stFileUploaderDropzone"] button * {
+            display: none !important;
+        }
+        [data-testid="stFileUploader"] [data-testid="stFileUploaderDropzone"] button::after {
+            content: "Carregar arquivo";
+            position: absolute;
+            inset: 0;
+            display: grid;
+            place-items: center;
+            color: #ffffff;
+            font-weight: 700;
+            font-size: 0.9rem;
+            line-height: 1;
+            white-space: nowrap;
+        }
+        [data-testid="stFileUploader"] [data-testid="stFileUploaderDropzone"] small,
+        [data-testid="stFileUploader"] [data-testid="stFileUploaderDropzone"] p,
+        [data-testid="stFileUploader"] [data-testid="stFileUploaderDropzone"] span {
+            color: #1f2937 !important;
+            opacity: 1 !important;
+        }
+
+        /* Funnel: cor forte para o texto do checkbox acima do upload */
+        [data-testid="stCheckbox"] label,
+        [data-testid="stCheckbox"] label p,
+        [data-testid="stCheckbox"] div,
+        [data-testid="stCheckbox"] span {
+            color: #374151 !important;
+            opacity: 1 !important;
+            font-weight: 600 !important;
+        }
+
+        /* Esconde texto de icone quebrado (ex.: keyboard_arrow_down) */
+        [data-testid="stExpander"] summary [class*="material"],
+        [data-testid="stExpander"] summary i {
+            display: none !important;
         }
         </style>
         """,
@@ -1342,32 +1746,21 @@ def _render_native_panel() -> None:
             st.subheader("Novo processamento")
             st.caption("Envie uma planilha ou use a base padrao do servidor.")
 
-            with st.expander("Manual rápido (como executar e baixar resultados)", expanded=False):
-                st.markdown(
-                    """
-                    #### Visão geral
-                    Nesta área você inicia uma coleta manual de preços de duas formas:
-
-                    1) **Executar com base cadastrada (padrão)**: usa os produtos já carregados no servidor (base padrão).
-                    2) **Executar com sua planilha (personalizado)**: você envia sua própria planilha para testar novos produtos.
-
-                    #### Passo a passo (recomendado)
-                    1. **Baixe a planilha modelo** e preencha com seus próximos produtos (sem alterar os nomes das colunas).
-                    2. **Faça upload** da planilha preenchida.
-                    3. Clique em **Executar com sua planilha (personalizado)**.
-                    4. Vá em **Status** para acompanhar em tempo real.
-                    5. Quando finalizar, clique em **Baixar resultado**.
-
-                    #### Dicas e boas práticas
-                    - Se estiver testando poucos itens, comece pelo **upload** para validar o formato.
-                    - Se o botão de upload estiver desabilitado, verifique se o arquivo é **.xlsx**.
-                    - Se o processamento nao iniciar, confira se a **base padrao** esta disponivel (aba Resumo).
-
-                    #### Problemas comuns (FAQ)
-                    - **“Falha ao iniciar job”**: normalmente indica planilha inválida ou API indisponível.
-                    - **“Download indisponível”**: o job ainda está em execução ou não gerou arquivo de saída.
-                    """
-                )
+            st.markdown(
+                """
+                <div style="border:1px solid #e4e7ec;border-radius:12px;background:#ffffff;padding:14px 16px;margin:6px 0 12px 0;">
+                  <p style="margin:0 0 8px 0;font-weight:700;color:#101828;">Manual rápido (como executar e baixar resultados)</p>
+                  <p style="margin:0;color:#344054;line-height:1.55;">
+                    1. Baixe a planilha modelo e preencha os produtos.<br/>
+                    2. Faça upload da planilha.<br/>
+                    3. Clique em <strong>Executar com sua planilha</strong>.<br/>
+                    4. Acompanhe em <strong>Status</strong>.<br/>
+                    5. Ao concluir, clique em <strong>Baixar resultado</strong>.
+                  </p>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
 
             st.markdown("### Planilha modelo")
             st.caption("Baixe um modelo, preencha com seus próximos produtos e faça upload abaixo.")
