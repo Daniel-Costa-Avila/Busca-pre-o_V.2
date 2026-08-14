@@ -17,23 +17,83 @@
             </div>
 
             <section id="feature-pane-overview" class="feature-pane is-active reveal">
-                <section class="kpi-grid" aria-label="Indicadores executivos">
-                    <article class="kpi-card glass tone-wait">
-                        <p>Em fila</p>
-                        <strong id="kpi-queued">{{ counts.QUEUED }}</strong>
+                <section class="info-card-grid" aria-label="Arquivos, ultimos jobs e conexao">
+                    <article class="info-card glass">
+                        <div class="info-card-head">
+                            <span class="info-card-icon" aria-hidden="true">&#128193;</span>
+                            <div>
+                                <p class="kicker">Arquivos</p>
+                                <h3>Base de entrada</h3>
+                            </div>
+                        </div>
+                        <p class="panel-note">Arquivo utilizado para importacao e processamento dos dados.</p>
+                        <div class="kv-line" id="home-file-row">
+                            <span id="home-file-name">input.xlsx padrao</span>
+                            <strong id="home-file-status" class="chip chip-pending">Verificando</strong>
+                        </div>
+                        <small id="home-file-checked" class="field-hint">Ultima verificacao: -</small>
                     </article>
-                    <article class="kpi-card glass tone-run">
-                        <p>Em execucao</p>
-                        <strong id="kpi-running">{{ counts.RUNNING }}</strong>
+
+                    <article class="info-card glass">
+                        <div class="info-card-head">
+                            <span class="info-card-icon" aria-hidden="true">&#128337;</span>
+                            <div>
+                                <p class="kicker">Ultimos jobs</p>
+                                <h3>Execucoes recentes</h3>
+                            </div>
+                        </div>
+                        <p class="panel-note">Ultimas execucoes realizadas pelo sistema.</p>
+                        <div id="home-jobs-list" class="home-jobs-list">
+                            <div class="kv-line"><span>Manual</span><strong>-</strong></div>
+                            <div class="kv-line"><span>Diario</span><strong>-</strong></div>
+                        </div>
+                        <button type="button" class="link-btn" data-feature-target="feature-pane-eventos" data-feature-label="Historico de Jobs">Ver historico completo &rarr;</button>
                     </article>
-                    <article class="kpi-card glass tone-done">
-                        <p>Concluidos</p>
-                        <strong id="kpi-done">{{ counts.DONE }}</strong>
+
+                    <article class="info-card glass">
+                        <div class="info-card-head">
+                            <span class="info-card-icon" aria-hidden="true">&#128246;</span>
+                            <div>
+                                <p class="kicker">Conexao</p>
+                                <h3>API e token</h3>
+                            </div>
+                        </div>
+                        <p class="panel-note">Status da conexao com API e tokens.</p>
+                        <div class="kv-line">
+                            <span>API</span>
+                            <strong id="home-conn-api" class="chip chip-pending">Verificando</strong>
+                        </div>
+                        <div class="kv-line">
+                            <span>Token</span>
+                            <strong id="home-conn-token" class="chip chip-pending">-</strong>
+                        </div>
+                        <small id="home-conn-checked" class="field-hint">Conexao verificada: -</small>
                     </article>
-                    <article class="kpi-card glass tone-fail">
-                        <p>Falhas</p>
-                        <strong id="kpi-failed">{{ counts.FAILED }}</strong>
-                    </article>
+                </section>
+
+                <section class="panel glass" aria-label="Visao geral do sistema">
+                    <div class="panel-head">
+                        <p class="kicker">Visao geral do sistema</p>
+                        <h3>Indicadores operacionais</h3>
+                    </div>
+                    <section class="kpi-grid" aria-label="Indicadores executivos">
+                        <article class="kpi-card glass tone-wait">
+                            <p><span class="kpi-icon" aria-hidden="true">&#8987;</span>Em fila</p>
+                            <strong id="kpi-queued">{{ counts.QUEUED }}</strong>
+                        </article>
+                        <article class="kpi-card glass tone-run">
+                            <p><span class="kpi-icon" aria-hidden="true">&#9654;</span>Em execucao</p>
+                            <strong id="kpi-running">{{ counts.RUNNING }}</strong>
+                        </article>
+                        <article class="kpi-card glass tone-done">
+                            <p><span class="kpi-icon" aria-hidden="true">&#9989;</span>Concluidos</p>
+                            <strong id="kpi-done">{{ counts.DONE }}</strong>
+                        </article>
+                        <article class="kpi-card glass tone-fail">
+                            <p><span class="kpi-icon" aria-hidden="true">&#9888;</span>Falhas</p>
+                            <strong id="kpi-failed">{{ counts.FAILED }}</strong>
+                        </article>
+                    </section>
                 </section>
 
                 <section class="overview-grid" aria-label="Resumo e atividade recente">
@@ -45,6 +105,16 @@
                         </div>
                         <ul id="timeline-compact" class="timeline is-compact"></ul>
                     </article>
+                </section>
+
+                <section class="panel glass downloads-panel" aria-label="Downloads">
+                    <div class="panel-head">
+                        <p class="kicker">Downloads</p>
+                        <h3>Disponibilize a ultima planilha diaria ja processada</h3>
+                        <p class="panel-note">Baixe o ultimo resultado da rotina diaria para testes e validacoes.</p>
+                    </div>
+                    <a id="btn-download-daily-home" class="btn btn-cta hidden" href="#" download>&#11015; Baixar ultima diaria (.xlsx)</a>
+                    <p id="home-download-empty" class="field-hint">Nenhuma planilha diaria disponivel ainda.</p>
                 </section>
             </section>
 
@@ -484,6 +554,23 @@
                     </div>
                     <ul id="timeline" class="timeline"></ul>
                 </section>
+            </section>
+
+            <section id="feature-pane-ajuda" class="feature-pane hidden reveal">
+                <article class="panel glass">
+                    <div class="panel-head">
+                        <p class="kicker">Ajuda</p>
+                        <h3>Como usar o Price Monitor Console</h3>
+                        <p class="panel-note">Guia rapido dos modulos principais.</p>
+                    </div>
+                    <div class="stack">
+                        <div class="kv-line"><span>Execucao manual</span><strong>Envie uma planilha ou use a base padrao e inicie a coleta.</strong></div>
+                        <div class="kv-line"><span>Status</span><strong>Acompanhe o job atual em tempo real e reenvie resultados.</strong></div>
+                        <div class="kv-line"><span>Historico de Jobs</span><strong>Consulte a linha do tempo completa de execucoes e alertas.</strong></div>
+                        <div class="kv-line"><span>Downloads</span><strong>Baixe a ultima planilha diaria processada pelo sistema.</strong></div>
+                        <div class="kv-line"><span>Integracoes</span><strong>Configure credenciais de marketplaces (ex.: Magalu).</strong></div>
+                    </div>
+                </article>
             </section>
         </section>
     </section>

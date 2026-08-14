@@ -32,6 +32,16 @@
     const kpiDone = document.getElementById("kpi-done");
     const kpiFailed = document.getElementById("kpi-failed");
 
+    const homeFileName = document.getElementById("home-file-name");
+    const homeFileStatus = document.getElementById("home-file-status");
+    const homeFileChecked = document.getElementById("home-file-checked");
+    const homeJobsList = document.getElementById("home-jobs-list");
+    const homeConnApi = document.getElementById("home-conn-api");
+    const homeConnToken = document.getElementById("home-conn-token");
+    const homeConnChecked = document.getElementById("home-conn-checked");
+    const downloadDailyHome = document.getElementById("btn-download-daily-home");
+    const homeDownloadEmpty = document.getElementById("home-download-empty");
+
     const runForm = document.getElementById("run-form");
     const fileInput = document.getElementById("file-input");
     const fileInputStatus = document.getElementById("file-input-status");
@@ -100,6 +110,7 @@
     const densitySelect = document.getElementById("density-select");
     const contrastRange = document.getElementById("contrast-range");
     const featureMenuButtons = Array.from(document.querySelectorAll(".feature-menu-btn[data-feature-target]"));
+    const featureLinkButtons = Array.from(document.querySelectorAll(".link-btn[data-feature-target]"));
     const featurePanes = Array.from(document.querySelectorAll(".feature-pane"));
     const activePath = document.getElementById("active-path");
     const marketplaceTabButtons = Array.from(document.querySelectorAll(".tab-btn[data-tab-target]"));
@@ -616,6 +627,12 @@
 
     function bindFeatureMenu() {
         featureMenuButtons.forEach(function (button) {
+            button.addEventListener("click", function () {
+                activateFeaturePane(button.dataset.featureTarget);
+            });
+        });
+
+        featureLinkButtons.forEach(function (button) {
             button.addEventListener("click", function () {
                 activateFeaturePane(button.dataset.featureTarget);
             });
@@ -1169,12 +1186,80 @@
         if (kpiFailed) kpiFailed.textContent = counts.FAILED ?? kpiFailed.textContent;
     }
 
+    function updateHomeCards(data) {
+        if (homeFileName && homeFileStatus) {
+            homeFileName.textContent = "input.xlsx padrao";
+            if (data.has_default_input) {
+                homeFileStatus.textContent = "Disponivel";
+                homeFileStatus.className = "chip chip-ok";
+            } else {
+                homeFileStatus.textContent = "Nao encontrado";
+                homeFileStatus.className = "chip chip-bad";
+            }
+        }
+        if (homeFileChecked) {
+            homeFileChecked.textContent = `Ultima verificacao: ${new Date().toLocaleString("pt-BR")}`;
+        }
+
+        if (homeJobsList) {
+            const rows = [
+                ["Manual", data.latest_manual_job],
+                ["Diario", data.latest_daily_job],
+            ]
+                .map(function ([label, job]) {
+                    if (!job || !job.job_id) {
+                        return `<div class="kv-line"><span>${label}</span><strong>-</strong></div>`;
+                    }
+                    return (
+                        `<div class="kv-line"><span>${label}</span>` +
+                        `<strong>${job.job_id} <span class="chip chip-${job.status === "DONE" ? "ok" : job.status === "FAILED" ? "bad" : "pending"}">${job.status}</span></strong></div>` +
+                        `<div class="kv-line"><span></span><small>${fmtTs(job.created_at)}</small></div>`
+                    );
+                })
+                .join("");
+            homeJobsList.innerHTML = rows;
+        }
+
+        if (downloadDailyHome && homeDownloadEmpty) {
+            const latestDaily = data.latest_daily_job;
+            if (latestDaily && latestDaily.job_id && latestDaily.output_available) {
+                downloadDailyHome.href = withToken("/download/daily/fixed");
+                downloadDailyHome.classList.remove("hidden");
+                homeDownloadEmpty.classList.add("hidden");
+            } else {
+                downloadDailyHome.classList.add("hidden");
+                homeDownloadEmpty.classList.remove("hidden");
+            }
+        }
+    }
+
+    function updateConnectionCard() {
+        if (homeConnApi && chipApi) {
+            homeConnApi.textContent = chipApi.textContent.replace(/^API:\s*/, "");
+            homeConnApi.className = `chip ${chipApi.classList.contains("chip-ok") ? "chip-ok" : chipApi.classList.contains("chip-bad") ? "chip-bad" : "chip-pending"}`;
+        }
+        if (homeConnToken) {
+            if (apiToken) {
+                homeConnToken.textContent = "Configurado";
+                homeConnToken.className = "chip chip-ok";
+            } else {
+                homeConnToken.textContent = "Nao configurado";
+                homeConnToken.className = "chip chip-pending";
+            }
+        }
+        if (homeConnChecked) {
+            homeConnChecked.textContent = `Conexao verificada: ${new Date().toLocaleString("pt-BR")}`;
+        }
+    }
+
     async function refreshOverview() {
         try {
             const response = await apiRequest("/api/overview", { method: "GET" });
             if (!response.ok) throw new Error(`HTTP ${response.status}`);
             const data = await response.json();
             updateKpis(data.counts || null);
+            updateHomeCards(data);
+            updateConnectionCard();
         } catch (error) {
             logEvent(`Falha ao atualizar KPIs: ${error.message}`, "error");
         }

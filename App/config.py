@@ -2,9 +2,55 @@ from __future__ import annotations
 
 from functools import lru_cache
 from os import cpu_count
+from pathlib import Path
 
 from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+# ---------------- CONFIG ----------------
+
+INPUT_FILE = "input.xlsx"
+INPUT_MERCADO_LIVRE_FILE = (
+    r"C:\Users\daniel.avila\Desktop\AGENTE_DE_PRECOS\Planilha diaria\Relatorio_Financeiro.xlsx"
+)
+INPUT_MERCADO_LIVRE_COTIA_FILE = (
+    r"C:\Users\daniel.avila\Desktop\AGENTE_DE_PRECOS\Planilha diaria Cotia\Relatorio_Financeiro_Cotia.xlsx"
+)
+OUTPUT_FILE = "output.xlsx"
+DEFAULT_BACKUP_OUTPUT_DIR = Path(r"C:\Users\daniel.avila\Desktop\Planilhas\Backup de Planilhas")
+OUTPUT_HEADERS = [
+    "id no Canal",
+    "CODIGO INTERNO",
+    "Canal",
+    "Titulo",
+    "Preco",
+    "Link",
+]
+
+SUMMARY_CHANNEL_COLUMNS = [
+    "Magazine Luiza",
+    "Casas Bahia",
+    "Web Continental",
+    "Casa e Video",
+    "Madeiramadeira",
+    "Zema",
+    "Mercado Livre",
+    "Carrefour",
+]
+
+SUMMARY_HEADERS = [
+    "CODIGO INTERNO",
+    "CODIGO LOJISTA",
+    "PRODUTO",
+    "Probel (oficial)",
+    "LOJA MENOR PREÇO",
+    "SELLER MENOR PREÇO",
+    "MENOR PRECO",
+    "PREÇO MÉDIO",
+    "QUANTIDADE DE LOJAS",
+    *SUMMARY_CHANNEL_COLUMNS,
+]
 
 
 class ScraperSettings(BaseSettings):

@@ -18,6 +18,16 @@ from typing import Callable, Optional
 from openpyxl import load_workbook, Workbook
 from openpyxl.worksheet.worksheet import Worksheet
 
+from App.config import (
+    DEFAULT_BACKUP_OUTPUT_DIR,
+    INPUT_FILE,
+    INPUT_MERCADO_LIVRE_COTIA_FILE,
+    INPUT_MERCADO_LIVRE_FILE,
+    OUTPUT_FILE,
+    OUTPUT_HEADERS,
+    SUMMARY_CHANNEL_COLUMNS,
+    SUMMARY_HEADERS,
+)
 from App.collectors.webcontinental import coletar as coletar_webcontinental
 from App.collectors.magalu import coletar as coletar_magalu, close_magalu_selenium_driver
 from App.collectors.zema import coletar as coletar_zema
@@ -150,51 +160,7 @@ def _should_use_magalu_subprocess_timeout(headless: bool, timeout_seconds: int) 
     return True
 
 
-# ---------------- CONFIG ----------------
-
-INPUT_FILE = "input.xlsx"
-INPUT_MERCADO_LIVRE_FILE = (
-    r"C:\Users\daniel.avila\Desktop\AGENTE_DE_PRECOS\Planilha diaria\Relatorio_Financeiro.xlsx"
-)
-INPUT_MERCADO_LIVRE_COTIA_FILE = (
-    r"C:\Users\daniel.avila\Desktop\AGENTE_DE_PRECOS\Planilha diaria Cotia\Relatorio_Financeiro_Cotia.xlsx"
-)
-OUTPUT_FILE = "output.xlsx"
-DEFAULT_BACKUP_OUTPUT_DIR = Path(r"C:\Users\daniel.avila\Desktop\Planilhas\Backup de Planilhas")
-OUTPUT_HEADERS = [
-    "id no Canal",
-    "CODIGO INTERNO",
-    "Canal",
-    "Titulo",
-    "Preco",
-    "Link",
-]
-
 CollectorFn = Callable[..., dict]
-
-SUMMARY_CHANNEL_COLUMNS = [
-    "Magazine Luiza",
-    "Casas Bahia",
-    "Web Continental",
-    "Casa e Video",
-    "Madeiramadeira",
-    "Zema",
-    "Mercado Livre",
-    "Carrefour",
-]
-
-SUMMARY_HEADERS = [
-    "CODIGO INTERNO",
-    "CODIGO LOJISTA",
-    "PRODUTO",
-    "Probel (oficial)",
-    "LOJA MENOR PREÃ‡O",
-    "SELLER MENOR PREÃ‡O",
-    "MENOR PRECO",
-    "PREÃ‡O MÃ‰DIO",
-    "QUANTIDADE DE LOJAS",
-    *SUMMARY_CHANNEL_COLUMNS,
-]
 
 
 # ---------------- RESOLVER COLETOR ----------------
@@ -361,6 +327,7 @@ def _append_precollected_rows(
     source_name: str,
     only_ids: set[str] | None,
     max_rows: int | None,
+    summary: dict[str, dict] | None = None,
     seen_rows: set[tuple[str, str, str]] | None = None,
     seen_ids: set[str] | None = None,
 ) -> int:
@@ -461,6 +428,17 @@ def _append_precollected_rows(
             a_prazo,
             _sanitize_output_link(link),
         ])
+
+        if summary is not None:
+            _update_summary(
+                summary,
+                codigo_interno,
+                id_no_canal,
+                titulo,
+                str(canal_raw or "").strip() or (canal or None),
+                canal,
+                _to_float(a_prazo),
+            )
 
         processed += 1
 
@@ -745,11 +723,29 @@ def _select_reference_price(result: dict) -> Optional[float]:
     return None
 
 
+def _resolve_output_seller(result: dict, channel_raw: object, link: str) -> str:
+    for key in ("seller", "seller_name", "seller_id", "loja", "store"):
+        value = result.get(key)
+        if value is not None and str(value).strip():
+            return str(value).strip()
+
+    channel_name = _resolve_channel_column(channel_raw, link)
+    if channel_name:
+        return channel_name
+
+    raw_channel = str(channel_raw or "").strip()
+    if raw_channel:
+        return raw_channel
+
+    return "DESCONHECIDO"
+
+
 def _update_summary(
     summary: dict[str, dict],
     codigo_interno,
     codigo_lojista,
     produto,
+    seller_name,
     channel_column: Optional[str],
     price: Optional[float],
 ) -> None:
@@ -765,6 +761,8 @@ def _update_summary(
             "produto": produto,
             "probel_oficial": None,
             "channel_prices": {name: None for name in SUMMARY_CHANNEL_COLUMNS},
+            "channel_sellers": {name: None for name in SUMMARY_CHANNEL_COLUMNS},
+            "probel_seller": None,
         }
         summary[key] = item
     else:
@@ -779,11 +777,20 @@ def _update_summary(
     if channel_column == "Probel (oficial)":
         current = item["probel_oficial"]
         item["probel_oficial"] = price if current is None else min(current, price)
+        if seller_name and not item["probel_seller"]:
+            item["probel_seller"] = seller_name
         return
 
     if channel_column in item["channel_prices"]:
         current = item["channel_prices"][channel_column]
         item["channel_prices"][channel_column] = price if current is None else min(current, price)
+        if seller_name and not item["channel_sellers"].get(channel_column):
+            item["channel_sellers"][channel_column] = seller_name
+
+
+def _normalize_summary_label(value: object, fallback: str) -> str:
+    text = str(value or "").strip()
+    return text if text else fallback
 
 
 def _append_summary_sheet(wb_out: Workbook, summary: dict[str, dict]) -> None:
@@ -792,23 +799,36 @@ def _append_summary_sheet(wb_out: Workbook, summary: dict[str, dict]) -> None:
 
     for item in summary.values():
         channel_prices: dict[str, Optional[float]] = item["channel_prices"]
-        ranked_prices: list[tuple[str, float]] = []
+        channel_sellers: dict[str, Optional[str]] = item.get("channel_sellers", {})
+        ranked_prices: list[tuple[str, float, str]] = []
 
         probel_price = item["probel_oficial"]
         if probel_price is not None:
-            ranked_prices.append(("Probel (oficial)", probel_price))
+            ranked_prices.append(
+                (
+                    "Probel (oficial)",
+                    probel_price,
+                    _normalize_summary_label(item.get("probel_seller"), "Probel (oficial)"),
+                )
+            )
 
         for channel_name in SUMMARY_CHANNEL_COLUMNS:
             value = channel_prices.get(channel_name)
             if value is not None:
-                ranked_prices.append((channel_name, value))
+                ranked_prices.append(
+                    (
+                        channel_name,
+                        value,
+                        _normalize_summary_label(channel_sellers.get(channel_name), channel_name),
+                    )
+                )
 
         if ranked_prices:
             ranked_prices.sort(key=lambda pair: pair[1])
             loja_menor_preco = ranked_prices[0][0]
-            seller_menor_preco = loja_menor_preco
+            seller_menor_preco = ranked_prices[0][2]
             menor_preco = ranked_prices[0][1]
-            preco_medio = sum(price for _, price in ranked_prices) / len(ranked_prices)
+            preco_medio = sum(price for _, price, _ in ranked_prices) / len(ranked_prices)
             quantidade_lojas = len(ranked_prices)
         else:
             loja_menor_preco = None
@@ -1007,6 +1027,7 @@ def main():
     processed = 0
     imported = 0
     seen_main_rows: set[tuple[str, str, str]] = set()
+    summary: dict[str, dict] = {}
 
     def _status_ok(result: dict) -> bool:
         return str(result.get("status") or "").startswith("OK")
@@ -1230,6 +1251,19 @@ def main():
                         }
 
             a_prazo, a_vista, parcelamento = _resolve_output_prices(result)
+            seller_name = _resolve_output_seller(result, canal_raw, link)
+            reference_price = _select_reference_price(result)
+            channel_column = _resolve_channel_column(canal_raw, link)
+
+            _update_summary(
+                summary,
+                codigo_interno,
+                id_no_canal,
+                titulo,
+                seller_name,
+                channel_column,
+                reference_price,
+            )
 
             ws_out.append([
                 id_no_canal,
@@ -1351,6 +1385,7 @@ def main():
                 source_name="mercado_livre",
                 only_ids=only_ids,
                 max_rows=max_rows,
+                summary=summary,
                 seen_rows=seen_import_rows,
                 seen_ids=seen_import_ids,
             )
@@ -1376,10 +1411,12 @@ def main():
                     source_name="mercado_livre",
                     only_ids=only_ids,
                     max_rows=max_rows,
+                    summary=summary,
                     seen_rows=seen_import_rows,
                     seen_ids=seen_import_ids,
                 )
 
+        _append_summary_sheet(wb_out, summary)
         wb_out.save(output_path)
         backup_path = _backup_output_file(output_path)
     finally:

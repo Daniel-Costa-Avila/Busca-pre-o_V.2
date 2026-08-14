@@ -17,6 +17,11 @@ $ErrorActionPreference = "Stop"
 $root = if ($PSScriptRoot) { $PSScriptRoot } else { (Get-Location).Path }
 Set-Location $root
 
+$uiPortWasExplicit = $PSBoundParameters.ContainsKey("UiPort")
+if ($UiBasePath -and -not $uiPortWasExplicit -and $UiPort -eq 8501) {
+  $UiPort = 8630
+}
+
 # Se abrir janelas separadas, mantenha este processo supervisor ativo para conseguir encerrar tudo junto.
 if ($PowershellWindows -and -not $Wait) { $Wait = $true }
 
@@ -231,6 +236,13 @@ function Stop-ProcessTree([int]$Pid) {
   }
 }
 
+function Get-UiLocalUrl {
+  if ($UiBasePath) {
+    return "http://127.0.0.1`:$UiPort/$UiBasePath"
+  }
+  return "http://127.0.0.1`:$UiPort"
+}
+
 if ($Wait) {
   $started = @()
 
@@ -263,7 +275,7 @@ if ($Wait) {
     }
     Write-Host "Pronto."
     Write-Host "API health (local): http://127.0.0.1`:$ApiPort/api/health"
-    Write-Host "UI (local):         http://127.0.0.1`:$UiPort"
+    Write-Host ("UI (local):         {0}" -f (Get-UiLocalUrl))
     if ($lanIp) {
       Write-Host "API health (rede):  http://$lanIp`:$ApiPort/api/health"
       Write-Host "UI (rede):          http://$lanIp`:$UiPort"
@@ -321,7 +333,7 @@ $lanIp = Get-LanIPv4
 Write-Host ""
 Write-Host "Pronto."
 Write-Host "API health (local): http://127.0.0.1`:$ApiPort/api/health"
-Write-Host "UI (local):         http://127.0.0.1`:$UiPort"
+Write-Host ("UI (local):         {0}" -f (Get-UiLocalUrl))
 if ($lanIp) {
   Write-Host "API health (rede):  http://$lanIp`:$ApiPort/api/health"
   Write-Host "UI (rede):          http://$lanIp`:$UiPort"

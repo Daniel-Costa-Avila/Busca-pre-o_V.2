@@ -500,6 +500,7 @@ def _collect_with_selenium_fallback(url: str, headless: bool, reason: str | None
     rotate_on_block = _env_bool("MAGALU_TRY_OTHER_BROWSERS_ON_BLOCK", True)
     magalu_use_profile = _env_bool("MAGALU_SELENIUM_USE_PROFILE", True)
     magalu_profile_dir = (os.getenv("MAGALU_SELENIUM_PROFILE_DIR") or "").strip() or str(PROFILE_DIR)
+    reset_driver_on_error = _env_bool("MAGALU_SELENIUM_RESET_ON_ERROR", headless)
 
     for browser_name in browser_candidates:
         # Reutiliza driver apenas quando ele já é do navegador atual.
@@ -583,12 +584,13 @@ def _collect_with_selenium_fallback(url: str, headless: bool, reason: str | None
 
             # Se foi bloqueado (403/captcha), tenta o próximo navegador antes de desistir.
             if rotate_on_block and _selenium_status_indicates_block(raw):
-                try:
-                    driver.quit()
-                except Exception:
-                    pass
-                _SELENIUM_DRIVER = None
-                _SELENIUM_BROWSER_NAME = None
+                if reset_driver_on_error:
+                    try:
+                        driver.quit()
+                    except Exception:
+                        pass
+                    _SELENIUM_DRIVER = None
+                    _SELENIUM_BROWSER_NAME = None
                 last_error = status_base
                 continue
 
@@ -596,12 +598,13 @@ def _collect_with_selenium_fallback(url: str, headless: bool, reason: str | None
             return raw
         except Exception as exc:
             last_error = _compact_reason(f"{type(exc).__name__} | {exc}", limit=220)
-            try:
-                driver.quit()
-            except Exception:
-                pass
-            _SELENIUM_DRIVER = None
-            _SELENIUM_BROWSER_NAME = None
+            if reset_driver_on_error:
+                try:
+                    driver.quit()
+                except Exception:
+                    pass
+                _SELENIUM_DRIVER = None
+                _SELENIUM_BROWSER_NAME = None
             continue
 
     detail = "; ".join(driver_errors) if driver_errors else (last_error or "nenhum navegador disponivel")

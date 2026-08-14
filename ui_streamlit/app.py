@@ -643,35 +643,38 @@ def _render_shell_css() -> None:
             box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
         }
 
-        /* Redesign visual: limpo, profissional e com hierarquia clara */
+        /* Redesign visual: tema escuro "Busca Preco", hierarquia clara */
         :root {
-            --font-display: Arial, sans-serif !important;
-            --font-body: Arial, sans-serif !important;
-            --bg-base: #f6f8fb !important;
-            --bg-muted: #eef2f7 !important;
-            --surface: #ffffff !important;
-            --surface-strong: #ffffff !important;
-            --ink: #101828 !important;
-            --muted: #475467 !important;
-            --line-soft: #e4e7ec !important;
-            --line: #d0d5dd !important;
+            --font-display: "SF Pro Display", "SF Pro Text", "Avenir Next", "Manrope", "Segoe UI", sans-serif !important;
+            --font-body: "SF Pro Text", "Avenir Next", "Public Sans", "Segoe UI", sans-serif !important;
+            --bg-base: #060a14 !important;
+            --bg-muted: #0a0f1e !important;
+            --surface: rgba(18, 26, 46, 0.72) !important;
+            --surface-strong: rgba(22, 31, 53, 0.92) !important;
+            --ink: #e7ecf7 !important;
+            --muted: #8a97b3 !important;
+            --line-soft: rgba(120, 150, 210, 0.16) !important;
+            --line: rgba(120, 150, 210, 0.26) !important;
             --radius-lg: 18px !important;
             --radius-md: 14px !important;
             --radius-sm: 10px !important;
-            --shadow-card: 0 8px 24px rgba(16, 24, 40, 0.06) !important;
-            --shadow-inner: inset 0 1px 0 rgba(255, 255, 255, 0.92) !important;
+            --shadow-card: 0 18px 42px rgba(0, 0, 0, 0.4) !important;
+            --shadow-inner: inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
         }
 
         html, body, [data-testid="stAppViewContainer"] {
-            font-family: Arial, sans-serif !important;
+            font-family: var(--font-body) !important;
             color: var(--ink) !important;
-            background: linear-gradient(180deg, var(--bg-base) 0%, var(--bg-muted) 100%) !important;
+            background:
+                radial-gradient(circle at 12% 0%, rgba(59, 109, 255, 0.16) 0%, transparent 38%),
+                radial-gradient(circle at 100% 10%, rgba(109, 60, 220, 0.12) 0%, transparent 42%),
+                linear-gradient(180deg, var(--bg-base) 0%, var(--bg-muted) 100%) !important;
         }
         [data-testid="stAppViewContainer"]::after {
             display: none !important;
         }
         [data-testid="stAppViewContainer"] * {
-            font-family: Arial, sans-serif !important;
+            font-family: var(--font-body) !important;
         }
         .block-container {
             max-width: 1340px !important;
@@ -687,7 +690,7 @@ def _render_shell_css() -> None:
         .pm-sidebar,
         .pm-kpi,
         .pm-card {
-            background: #ffffff !important;
+            background: var(--surface) !important;
             border-color: var(--line-soft) !important;
             box-shadow: var(--shadow-card) !important;
         }
@@ -700,17 +703,18 @@ def _render_shell_css() -> None:
             font-size: 1.28rem !important;
             font-weight: 700 !important;
             letter-spacing: -0.01em !important;
+            color: var(--ink) !important;
         }
         .pm-sub {
             color: var(--muted) !important;
         }
 
         .pm-kpi p {
-            color: #344054 !important;
+            color: var(--muted) !important;
             font-size: 0.76rem !important;
         }
         .pm-kpi strong {
-            color: #101828 !important;
+            color: var(--ink) !important;
             font-size: 2.1rem !important;
         }
         .pm-tone-wait::before,
@@ -724,63 +728,67 @@ def _render_shell_css() -> None:
 
         .pm-nav-title,
         .pm-kicker {
-            color: #667085 !important;
+            color: var(--muted) !important;
             font-weight: 700 !important;
         }
         .pm-pathbar strong,
         .pm-card-title {
-            color: #101828 !important;
+            color: var(--ink) !important;
             letter-spacing: -0.01em !important;
         }
 
         .pm-kv {
-            background: #f9fafb !important;
-            border: 1px solid #eaecf0 !important;
+            background: rgba(120, 150, 220, 0.06) !important;
+            border: 1px solid var(--line-soft) !important;
             border-radius: 10px !important;
         }
         .pm-kv span:first-child,
         .pm-mono {
-            color: #344054 !important;
+            color: var(--muted) !important;
         }
         .pm-badge {
-            background: #f2f4f7 !important;
-            border-color: #d0d5dd !important;
-            color: #344054 !important;
+            background: rgba(138, 151, 179, 0.14) !important;
+            border-color: var(--line) !important;
+            color: var(--ink) !important;
         }
         .pm-badge-ok {
-            background: #ecfdf3 !important;
-            border-color: #abefc6 !important;
-            color: #067647 !important;
+            background: rgba(52, 211, 153, 0.14) !important;
+            border-color: rgba(52, 211, 153, 0.4) !important;
+            color: #6ee7b7 !important;
         }
         .pm-badge-warn {
-            background: #fffaeb !important;
-            border-color: #fedf89 !important;
-            color: #b54708 !important;
+            background: rgba(251, 191, 36, 0.14) !important;
+            border-color: rgba(251, 191, 36, 0.4) !important;
+            color: #fcd34d !important;
         }
         .pm-badge-bad {
-            background: #fef3f2 !important;
-            border-color: #fecdca !important;
-            color: #b42318 !important;
+            background: rgba(239, 68, 68, 0.14) !important;
+            border-color: rgba(239, 68, 68, 0.4) !important;
+            color: #fca5a5 !important;
         }
         .pm-badge-info {
-            background: #eff8ff !important;
-            border-color: #b2ddff !important;
-            color: #175cd3 !important;
+            background: rgba(59, 109, 255, 0.14) !important;
+            border-color: rgba(59, 109, 255, 0.4) !important;
+            color: #a9c2ff !important;
         }
 
         .pm-sidebar [data-testid="stButton"] button {
             justify-content: flex-start !important;
             border-radius: 12px !important;
-            border: 1px solid #d0d5dd !important;
-            background: #ffffff !important;
-            color: #101828 !important;
+            border: 1px solid transparent !important;
+            background: transparent !important;
+            color: var(--muted) !important;
             box-shadow: none !important;
         }
+        .pm-sidebar [data-testid="stButton"] button:hover {
+            background: rgba(120, 150, 220, 0.1) !important;
+            color: var(--ink) !important;
+        }
         .pm-sidebar [data-testid="stButton"] button[kind="primary"] {
-            background: linear-gradient(135deg, #2563eb 0%, #0ea5e9 100%) !important;
-            border-color: rgba(37, 99, 235, 0.34) !important;
+            background: linear-gradient(135deg, #3b6dff 0%, #2447c9 100%) !important;
+            border-color: rgba(59, 109, 255, 0.4) !important;
             color: #ffffff !important;
-            box-shadow: 0 8px 20px rgba(37, 99, 235, 0.28) !important;
+            box-shadow: 0 8px 20px rgba(36, 71, 201, 0.34) !important;
         }
 
         .stButton > button {
@@ -788,50 +796,50 @@ def _render_shell_css() -> None:
             font-weight: 600 !important;
         }
         .stButton > button[aria-label*="Executar"] {
-            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%) !important;
-            border-color: rgba(37, 99, 235, 0.38) !important;
+            background: linear-gradient(135deg, #3b6dff 0%, #2447c9 100%) !important;
+            border-color: rgba(59, 109, 255, 0.4) !important;
             color: #ffffff !important;
         }
         .stButton > button[aria-label*="Baixar"] {
-            background: linear-gradient(135deg, #16a34a 0%, #15803d 100%) !important;
-            border-color: rgba(22, 163, 74, 0.38) !important;
+            background: linear-gradient(135deg, #e6394a 0%, #c81f30 100%) !important;
+            border-color: rgba(230, 57, 74, 0.4) !important;
             color: #ffffff !important;
         }
         .stButton > button[aria-label*="Atualizar"] {
             background: linear-gradient(135deg, #0891b2 0%, #0e7490 100%) !important;
-            border-color: rgba(8, 145, 178, 0.38) !important;
+            border-color: rgba(8, 145, 178, 0.4) !important;
             color: #ffffff !important;
         }
         .stButton > button[aria-label*="Parar"] {
             background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%) !important;
-            border-color: rgba(220, 38, 38, 0.38) !important;
+            border-color: rgba(220, 38, 38, 0.4) !important;
             color: #ffffff !important;
         }
 
         .pm-auto-banner {
             border-radius: 16px !important;
-            border: 1px solid #bfdbfe !important;
-            background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 55%, #bfdbfe 100%) !important;
-            box-shadow: 0 10px 24px rgba(37, 99, 235, 0.12) !important;
+            border: 1px solid rgba(96, 165, 250, 0.38) !important;
+            background: linear-gradient(135deg, rgba(2, 132, 199, 0.26) 0%, rgba(30, 64, 175, 0.24) 45%, rgba(15, 23, 42, 0.74) 100%) !important;
+            box-shadow: 0 18px 48px rgba(2, 132, 199, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.06) !important;
         }
         .pm-auto-banner__title {
-            color: #1d4ed8 !important;
+            color: rgba(255, 255, 255, 0.96) !important;
         }
         .pm-auto-banner__subtitle {
-            color: #1e3a8a !important;
+            color: rgba(226, 232, 240, 0.82) !important;
         }
         .pm-auto-banner__time,
         .pm-auto-banner__icon {
-            background: linear-gradient(135deg, #2563eb 0%, #0ea5e9 100%) !important;
+            background: linear-gradient(135deg, #3b6dff 0%, #2447c9 100%) !important;
             color: #ffffff !important;
-            border-color: rgba(37, 99, 235, 0.35) !important;
+            border-color: rgba(59, 109, 255, 0.4) !important;
         }
 
         /* Bloco de execução manual: melhorar contraste e legibilidade */
         [data-testid="stExpander"] details {
-            border: 1px solid #e4e7ec !important;
+            border: 1px solid var(--line-soft) !important;
             border-radius: 12px !important;
-            background: #ffffff !important;
+            background: var(--surface) !important;
         }
         [data-testid="stExpander"] details summary::-webkit-details-marker {
             display: none !important;
@@ -839,8 +847,8 @@ def _render_shell_css() -> None:
         [data-testid="stExpander"] summary {
             position: relative !important;
             padding-left: 2rem !important;
-            background: #ffffff !important;
-            color: #101828 !important;
+            background: transparent !important;
+            color: var(--ink) !important;
         }
         [data-testid="stExpander"] summary::before {
             content: "▸";
@@ -848,7 +856,7 @@ def _render_shell_css() -> None:
             left: 0.75rem;
             top: 50%;
             transform: translateY(-50%);
-            color: #475467;
+            color: var(--muted);
             font-size: 0.95rem;
             line-height: 1;
         }
@@ -859,24 +867,24 @@ def _render_shell_css() -> None:
             display: none !important;
         }
         [data-testid="stExpander"] summary p {
-            color: #101828 !important;
+            color: var(--ink) !important;
             font-weight: 600 !important;
             margin: 0 !important;
         }
 
         [data-testid="stFileUploaderDropzone"] {
-            background: #f8fafc !important;
-            border: 1px solid #d0d5dd !important;
-            color: #344054 !important;
+            background: rgba(2, 6, 23, 0.4) !important;
+            border: 1px solid var(--line) !important;
+            color: var(--muted) !important;
         }
         [data-testid="stFileUploaderDropzone"] * {
-            color: #344054 !important;
+            color: var(--muted) !important;
         }
         [data-testid="stFileUploaderDropzone"] button {
             min-width: 132px !important;
             border-radius: 10px !important;
-            border: 1px solid #1d4ed8 !important;
-            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%) !important;
+            border: 1px solid rgba(59, 109, 255, 0.4) !important;
+            background: linear-gradient(135deg, #3b6dff 0%, #2447c9 100%) !important;
             color: #ffffff !important;
             font-weight: 700 !important;
             white-space: nowrap !important;
@@ -896,81 +904,81 @@ def _render_shell_css() -> None:
         [data-testid="stFileUploaderDropzone"] small,
         [data-testid="stFileUploaderDropzone"] [data-testid="stCaptionContainer"],
         [data-testid="stFileUploaderDropzone"] [data-testid="stMarkdownContainer"] p {
-            color: #1f2937 !important;
+            color: var(--muted) !important;
             opacity: 1 !important;
         }
 
         [data-testid="stCheckbox"] label,
         [data-testid="stCheckbox"] span {
-            color: #344054 !important;
+            color: var(--muted) !important;
             opacity: 1 !important;
         }
         [data-testid="stCheckbox"] p {
-            color: #344054 !important;
+            color: var(--muted) !important;
             opacity: 1 !important;
             font-weight: 600 !important;
         }
 
         .stButton > button:disabled {
-            background: #eaecf0 !important;
-            border-color: #d0d5dd !important;
-            color: #98a2b3 !important;
+            background: rgba(120, 150, 220, 0.08) !important;
+            border-color: var(--line-soft) !important;
+            color: #64748b !important;
             opacity: 1 !important;
             box-shadow: none !important;
         }
         .stDownloadButton > button,
         [data-testid="stDownloadButton"] > button {
             border-radius: 12px !important;
-            border: 1px solid rgba(22, 163, 74, 0.38) !important;
-            background: linear-gradient(135deg, #16a34a 0%, #15803d 100%) !important;
+            border: 1px solid rgba(230, 57, 74, 0.4) !important;
+            background: linear-gradient(135deg, #e6394a 0%, #c81f30 100%) !important;
             color: #ffffff !important;
             font-weight: 600 !important;
-            box-shadow: 0 10px 24px rgba(22, 163, 74, 0.24) !important;
+            box-shadow: 0 10px 24px rgba(200, 31, 48, 0.3) !important;
         }
         .stDownloadButton > button:disabled,
         [data-testid="stDownloadButton"] > button:disabled {
-            background: #eaecf0 !important;
-            border-color: #d0d5dd !important;
-            color: #98a2b3 !important;
+            background: rgba(120, 150, 220, 0.08) !important;
+            border-color: var(--line-soft) !important;
+            color: #64748b !important;
             box-shadow: none !important;
         }
 
         /* Correcao final da tela "Manual de Execucao" */
         [data-testid="stButton"] > button {
-            color: #0f172a !important;
-            background: linear-gradient(180deg, #ffffff 0%, #eef2f7 100%) !important;
-            border: 1px solid #cbd5e1 !important;
+            color: var(--ink) !important;
+            background: rgba(120, 150, 220, 0.1) !important;
+            border: 1px solid var(--line) !important;
         }
         [data-testid="stButton"] > button[aria-label*="Executar com base cadastrada"] {
-            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%) !important;
-            border-color: rgba(220, 38, 38, 0.36) !important;
+            background: linear-gradient(135deg, #e6394a 0%, #c81f30 100%) !important;
+            border-color: rgba(230, 57, 74, 0.4) !important;
             color: #ffffff !important;
         }
         [data-testid="stButton"] > button[aria-label*="Executar com sua planilha"] {
-            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%) !important;
-            border-color: rgba(37, 99, 235, 0.36) !important;
+            background: linear-gradient(135deg, #3b6dff 0%, #2447c9 100%) !important;
+            border-color: rgba(59, 109, 255, 0.4) !important;
             color: #ffffff !important;
         }
         [data-testid="stButton"] > button:disabled,
         [data-testid="stButton"] > button[aria-label*="Executar com sua planilha"]:disabled,
         [data-testid="stButton"] > button[aria-label*="Executar com base cadastrada"]:disabled {
-            background: #e5e7eb !important;
-            border-color: #cbd5e1 !important;
-            color: #667085 !important;
+            background: rgba(120, 150, 220, 0.08) !important;
+            border-color: var(--line-soft) !important;
+            color: #64748b !important;
             text-shadow: none !important;
             opacity: 1 !important;
             box-shadow: none !important;
         }
 
         [data-testid="stDownloadButton"] > button {
-            background: linear-gradient(135deg, #16a34a 0%, #15803d 100%) !important;
-            border-color: rgba(22, 163, 74, 0.36) !important;
+            background: linear-gradient(135deg, #34d399 0%, #16a34a 100%) !important;
+            border-color: rgba(22, 163, 74, 0.4) !important;
             color: #ffffff !important;
         }
         [data-testid="stDownloadButton"] > button:disabled {
-            background: #e5e7eb !important;
-            border-color: #cbd5e1 !important;
-            color: #667085 !important;
+            background: rgba(120, 150, 220, 0.08) !important;
+            border-color: var(--line-soft) !important;
+            color: #64748b !important;
             opacity: 1 !important;
         }
 
@@ -981,8 +989,8 @@ def _render_shell_css() -> None:
             height: 36px !important;
             padding: 0 14px !important;
             border-radius: 10px !important;
-            border: 1px solid #1d4ed8 !important;
-            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%) !important;
+            border: 1px solid rgba(59, 109, 255, 0.4) !important;
+            background: linear-gradient(135deg, #3b6dff 0%, #2447c9 100%) !important;
             box-shadow: none !important;
             color: transparent !important;
             overflow: hidden !important;
@@ -1005,7 +1013,7 @@ def _render_shell_css() -> None:
         [data-testid="stFileUploader"] [data-testid="stFileUploaderDropzone"] small,
         [data-testid="stFileUploader"] [data-testid="stFileUploaderDropzone"] p,
         [data-testid="stFileUploader"] [data-testid="stFileUploaderDropzone"] span {
-            color: #1f2937 !important;
+            color: var(--muted) !important;
             opacity: 1 !important;
         }
 
@@ -1014,7 +1022,7 @@ def _render_shell_css() -> None:
         [data-testid="stCheckbox"] label p,
         [data-testid="stCheckbox"] div,
         [data-testid="stCheckbox"] span {
-            color: #374151 !important;
+            color: var(--muted) !important;
             opacity: 1 !important;
             font-weight: 600 !important;
         }

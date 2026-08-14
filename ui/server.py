@@ -748,10 +748,7 @@ def _build_merged_output(job: Job) -> tuple[Path | None, str | None]:
     })
 
     seen_ids: set[str] = set()
-    merged_wb = Workbook()
-    merged_ws = merged_wb.active
-    merged_ws.title = "Output"
-    merged_ws.append(headers)
+    merged_rows: list[list[Any]] = []
     for row in ws_main.iter_rows(min_row=2, values_only=True):
         if out_id is not None and out_id < len(row):
             raw_id = row[out_id]
@@ -760,7 +757,7 @@ def _build_merged_output(job: Job) -> tuple[Path | None, str | None]:
                 if key in seen_ids:
                     continue
                 seen_ids.add(key)
-        merged_ws.append(list(row))
+        merged_rows.append(list(row))
 
     out_codigo = _find_output_col(headers, {
         "codigo interno",
@@ -837,11 +834,17 @@ def _build_merged_output(job: Job) -> tuple[Path | None, str | None]:
         if out_hora is not None:
             out_row[out_hora] = None
 
-        merged_ws.append(out_row)
+        merged_rows.append(out_row)
 
     merged_path = job.output_path.parent / f"{job.output_path.stem}_merged.xlsx"
     try:
-        merged_wb.save(merged_path)
+        # Preserva as demais abas do workbook original, como "Consolidado".
+        merged_ws = wb_main["Output"] if "Output" in wb_main.sheetnames else wb_main.active
+        if merged_ws.max_row > 1:
+            merged_ws.delete_rows(2, merged_ws.max_row - 1)
+        for row in merged_rows:
+            merged_ws.append(row)
+        wb_main.save(merged_path)
     except Exception as exc:
         return None, f"Falha ao salvar planilha unificada: {type(exc).__name__}: {exc}"
 

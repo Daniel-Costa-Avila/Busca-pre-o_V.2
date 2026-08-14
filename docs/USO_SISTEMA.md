@@ -39,8 +39,9 @@ Esse arquivo e sobrescrito a cada nova execucao.
 
 ## 6. Regras de consolidacao
 - A planilha de saida ja vem unificada com a planilha secundaria (Relatorio_Financeiro).
-- O resultado final tem apenas uma aba.
-- A coluna de preco se chama "Preco".
+- O arquivo final gera duas abas: `Output` e `Consolidado`.
+- A aba `Consolidado` traz `LOJA MENOR PREÇO`, `SELLER MENOR PREÇO`, `MENOR PRECO`, `PREÇO MÉDIO` e `QUANTIDADE DE LOJAS`.
+- A coluna de preco se chama `Preco`.
 
 ## 7. Canais suportados (exemplos)
 - Magazine Luiza

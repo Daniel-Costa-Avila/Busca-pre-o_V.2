@@ -7,6 +7,22 @@ from App.utils.mercadolivre_api import MercadoLivreAPI
 from . import dom
 
 
+def _extract_seller_name(item_data: dict) -> str | None:
+    seller_data = item_data.get("seller")
+    if isinstance(seller_data, dict):
+        for key in ("nickname", "name", "id"):
+            value = seller_data.get(key)
+            if value is not None and str(value).strip():
+                return str(value).strip()
+
+    for key in ("seller_nickname", "seller_name", "seller_id"):
+        value = item_data.get(key)
+        if value is not None and str(value).strip():
+            return str(value).strip()
+
+    return None
+
+
 def coletar(driver: Any, link: str, sku: Optional[str] = None) -> dict:
     """
     Coletor Hibrido para Mercado Livre.
@@ -39,6 +55,7 @@ def coletar(driver: Any, link: str, sku: Optional[str] = None) -> dict:
                 "pix": price,  # Na API do ML, o preco principal e unico.
                 "prazo": None,  # A API publica de itens nao fornece parcelamento.
                 "status": f"OK (API) - {status}",
+                "seller": _extract_seller_name(item_data),
             }
         else:
             # A API esta configurada, mas falhou. Avisa e segue para o fallback.
@@ -78,6 +95,7 @@ def coletar(driver: Any, link: str, sku: Optional[str] = None) -> dict:
             "pix": avista,  # No DOM, o preco a vista e o principal.
             "prazo": prazo,
             "status": status,
+            "seller": dom.extrair_seller_dom(driver),
         }
     except Exception as e:
         return {
