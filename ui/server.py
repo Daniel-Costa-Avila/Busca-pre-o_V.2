@@ -32,11 +32,12 @@ from openpyxl import load_workbook, Workbook
 from pydantic import BaseModel, Field
 
 from App.config import get_server_settings
+from App.workbook_style import style_result_workbook
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 RUNS_DIR = BASE_DIR / "runs"
 DEFAULT_INPUT = BASE_DIR / "input.xlsx"
-FIXED_MODEL_TEMPLATE = Path(r"C:\Users\daniel.avila\Desktop\modelo.xlsx")
+FIXED_MODEL_TEMPLATE = BASE_DIR / "Modelo.xlsx"
 DAILY_INPUT_DIR = Path(r"C:\Users\daniel.avila\Desktop\AGENTE_DE_PRECOS\Planilha diaria")
 SECONDARY_INPUT_DIR = Path(r"C:\Users\daniel.avila\Desktop\AGENTE_DE_PRECOS\Planilha diaria")
 SECONDARY_ML_PATH = Path(r"C:\Users\daniel.avila\Desktop\AGENTE_DE_PRECOS\Planilha diaria\Relatorio_Financeiro.xlsx")
@@ -703,6 +704,7 @@ def _build_simple_output(base_path: Path, mode: str) -> tuple[Path | None, str |
                 if (out_prazo is not None and normalized_mode == "a_prazo") or (out_avista is not None and normalized_mode == "a_vista")
                 else None,
             ])
+        style_result_workbook(simple_only)
         simple_only.save(simple_path)
     except Exception as exc:
         label = "a prazo" if normalized_mode == "a_prazo" else "a vista"
@@ -844,6 +846,7 @@ def _build_merged_output(job: Job) -> tuple[Path | None, str | None]:
             merged_ws.delete_rows(2, merged_ws.max_row - 1)
         for row in merged_rows:
             merged_ws.append(row)
+        style_result_workbook(wb_main)
         wb_main.save(merged_path)
     except Exception as exc:
         return None, f"Falha ao salvar planilha unificada: {type(exc).__name__}: {exc}"

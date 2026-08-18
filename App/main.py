@@ -37,6 +37,7 @@ from App.collectors.carrefour import coletar as coletar_carrefour
 from App.collectors.mercadolivre import coletar as coletar_mercadolivre
 from App.collectors.casasbahia import coletar as coletar_casasbahia
 from App.utils.browser import get_driver, resolve_browser_pool
+from App.workbook_style import style_result_workbook
 
 
 def _magalu_collect_worker(url: str, headless: bool, queue) -> None:
@@ -1417,6 +1418,7 @@ def main():
                 )
 
         _append_summary_sheet(wb_out, summary)
+        style_result_workbook(wb_out)
         wb_out.save(output_path)
         backup_path = _backup_output_file(output_path)
     finally:

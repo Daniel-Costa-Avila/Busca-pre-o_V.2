@@ -9,6 +9,7 @@ from datetime import datetime
 from io import BytesIO
 from pathlib import Path
 from urllib.parse import parse_qsl, urlencode, urlparse, urlunparse
+from zoneinfo import ZoneInfo
 
 import requests
 import streamlit as st
@@ -93,22 +94,10 @@ _redirect_to_root_if_needed()
 def _should_embed_api_iframe() -> bool:
     raw = os.getenv("UI_EMBED_API_IFRAME")
     if raw is not None:
-        return _parse_bool_env(raw, default=True)
+        return _parse_bool_env(raw, default=False)
 
-    # Auto-detect: when accessed via a reverse proxy / Funnel, embedding the API UI iframe
-    # (usually pointing at http://127.0.0.1:8000) fails on the client browser.
-    try:
-        host = str(st.context.headers.get("host") or "").lower()
-        if host and not host.startswith(("127.0.0.1", "localhost")):
-            return False
-        url = str(getattr(st.context, "url", "") or "")
-        parsed = urlparse(url)
-        if parsed.hostname and parsed.hostname not in {"127.0.0.1", "localhost"}:
-            return False
-    except Exception:
-        pass
-
-    return True
+    # Use o mesmo painel nativo em acessos locais e por proxy/túnel.
+    return False
 
 
 def _render_iframe(url: str, *, height: int) -> None:
@@ -1032,6 +1021,399 @@ def _render_shell_css() -> None:
         [data-testid="stExpander"] summary i {
             display: none !important;
         }
+
+        /* Layout de referência — dashboard Busca Preço */
+        :root {
+            --bp-bg: #020713;
+            --bp-panel: #041022;
+            --bp-panel-2: #061329;
+            --bp-border: #10203b;
+            --bp-border-soft: rgba(57, 91, 145, 0.22);
+            --bp-blue: #1268ff;
+            --bp-blue-2: #0848d8;
+            --bp-text: #f5f7fb;
+            --bp-muted: #98a4bb;
+            --bp-green: #11c968;
+            --bp-red: #ef233c;
+        }
+        html, body, [data-testid="stAppViewContainer"] {
+            background: var(--bp-bg) !important;
+            color: var(--bp-text) !important;
+        }
+        [data-testid="stAppViewContainer"] {
+            background:
+              radial-gradient(circle at 72% -20%, rgba(16, 83, 210, 0.10), transparent 36%),
+              linear-gradient(180deg, #020713 0%, #030a17 100%) !important;
+        }
+        .block-container {
+            max-width: 1600px !important;
+            padding: 0.8rem 0.8rem 0 !important;
+        }
+        div[data-testid="stHorizontalBlock"]:has(.pm-sidebar-brand) {
+            align-items: stretch !important;
+            gap: 14px !important;
+        }
+        div[data-testid="stColumn"]:has(.pm-sidebar-brand) {
+            min-width: 238px !important;
+            max-width: 270px !important;
+            flex: 0 0 255px !important;
+        }
+        div[data-testid="stColumn"]:has(.pm-sidebar-brand) > div[data-testid="stVerticalBlock"] {
+            min-height: calc(100vh - 26px);
+            padding: 16px 13px 14px;
+            border: 1px solid var(--bp-border);
+            border-radius: 13px;
+            background: rgba(2, 8, 20, 0.94);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.018);
+            gap: 5px !important;
+        }
+        div[data-testid="stColumn"]:has(.pm-main-marker) {
+            min-width: 0 !important;
+        }
+        div[data-testid="stColumn"]:has(.pm-main-marker) > div[data-testid="stVerticalBlock"] {
+            gap: 13px !important;
+        }
+        .pm-sidebar-brand {
+            display: flex;
+            align-items: center;
+            gap: 11px;
+            min-height: 78px;
+            padding: 4px 4px 14px;
+            border-bottom: 1px solid rgba(19, 41, 75, 0.42);
+            margin-bottom: 13px;
+        }
+        .pm-sidebar-logo {
+            position: relative;
+            width: 45px;
+            height: 45px;
+            flex: 0 0 45px;
+            border: 3px solid #1472ff;
+            border-radius: 50%;
+            color: #1472ff;
+            display: grid;
+            place-items: center;
+            font: 800 24px/1 var(--font-display);
+            box-shadow: 0 0 18px rgba(20, 114, 255, 0.18);
+        }
+        .pm-sidebar-logo::after {
+            content: "";
+            position: absolute;
+            width: 22px;
+            height: 4px;
+            right: -16px;
+            bottom: -5px;
+            border-radius: 4px;
+            background: #1472ff;
+            transform: rotate(47deg);
+        }
+        .pm-sidebar-name {
+            color: #f6f7fb;
+            font-size: 1.22rem;
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            white-space: nowrap;
+        }
+        .pm-sidebar-name span { color: #1472ff; }
+        .pm-sidebar-tagline {
+            margin-top: 1px;
+            color: #c9d2e3;
+            font-size: 0.57rem;
+            font-weight: 700;
+            letter-spacing: 0.18em;
+            white-space: nowrap;
+        }
+        div[data-testid="stColumn"]:has(.pm-sidebar-brand) [data-testid="stButton"] button {
+            min-height: 50px !important;
+            justify-content: flex-start !important;
+            padding: 0 15px !important;
+            border: 1px solid transparent !important;
+            border-radius: 9px !important;
+            background: transparent !important;
+            color: #f1f4fa !important;
+            box-shadow: none !important;
+            font-size: 0.94rem !important;
+            font-weight: 500 !important;
+        }
+        div[data-testid="stColumn"]:has(.pm-sidebar-brand) [data-testid="stButton"] button:hover {
+            background: rgba(18, 104, 255, 0.11) !important;
+            border-color: rgba(18, 104, 255, 0.22) !important;
+        }
+        div[data-testid="stColumn"]:has(.pm-sidebar-brand) [data-testid="stButton"] button[kind="primary"] {
+            background: linear-gradient(180deg, #1472ff 0%, #0750db 100%) !important;
+            border-color: #1c75ff !important;
+            color: #ffffff !important;
+            box-shadow: 0 8px 20px rgba(5, 72, 216, 0.27), inset 0 1px 0 rgba(255,255,255,0.16) !important;
+            font-weight: 700 !important;
+        }
+        div[data-testid="stColumn"]:has(.pm-sidebar-brand) [data-testid="stButton"] button p {
+            width: 100%;
+            margin: 0 !important;
+            text-align: left;
+        }
+        div[data-testid="stColumn"]:has(.pm-sidebar-brand) div[data-testid="stElementContainer"]:has(.pm-user-card) {
+            margin-top: auto !important;
+        }
+        .pm-sidebar-spacer { min-height: 0; }
+        .pm-user-card {
+            margin-top: auto;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 13px 10px;
+            border: 1px solid var(--bp-border);
+            border-radius: 10px;
+            background: rgba(5, 16, 35, 0.88);
+        }
+        .pm-user-avatar {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            display: grid;
+            place-items: center;
+            background: linear-gradient(145deg, #31579b, #17305d);
+            color: #fff;
+            font-size: 1.1rem;
+        }
+        .pm-user-name { color: #fff; font-weight: 700; font-size: 0.87rem; }
+        .pm-user-role { color: #2d7dff; font-size: 0.75rem; }
+        .pm-version { color: #78859d; font-size: 0.69rem; padding: 6px 1px 0; }
+        div[data-testid="stColumn"]:has(.pm-sidebar-brand) [data-testid="stButton"] button::before {
+            width: 22px;
+            flex: 0 0 22px;
+            color: currentColor;
+            font-size: 1.15rem;
+            line-height: 1;
+            text-align: center;
+        }
+        div[data-testid="stColumn"]:has(.pm-sidebar-brand) [data-testid="stButton"] button[aria-label*="Resumo"]::before { content: "⌂"; }
+        div[data-testid="stColumn"]:has(.pm-sidebar-brand) [data-testid="stButton"] button[aria-label*="Execução Manual"]::before { content: "▷"; }
+        div[data-testid="stColumn"]:has(.pm-sidebar-brand) [data-testid="stButton"] button[aria-label="Status"]::before { content: "⌁"; }
+        div[data-testid="stColumn"]:has(.pm-sidebar-brand) [data-testid="stButton"] button[aria-label*="Histórico"]::before { content: "◷"; }
+        div[data-testid="stColumn"]:has(.pm-sidebar-brand) [data-testid="stButton"] button[aria-label*="Downloads"]::before { content: "⇩"; }
+        div[data-testid="stColumn"]:has(.pm-sidebar-brand) [data-testid="stButton"] button[aria-label*="Configurações"]::before { content: "⚙"; }
+        div[data-testid="stColumn"]:has(.pm-sidebar-brand) [data-testid="stButton"] button[aria-label*="Ajuda"]::before { content: "?"; }
+
+        .pm-main-marker { display: none; }
+        .pm-dashboard-header {
+            min-height: 98px;
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            align-items: center;
+            gap: 24px;
+            padding: 17px 26px;
+            border: 1px solid var(--bp-border);
+            border-radius: 13px;
+            background: linear-gradient(110deg, rgba(4,16,34,0.98), rgba(3,12,27,0.97));
+        }
+        .pm-dashboard-title {
+            color: #fff;
+            font-size: 1.45rem;
+            font-weight: 750;
+            letter-spacing: -0.025em;
+        }
+        .pm-dashboard-subtitle { margin-top: 3px; color: var(--bp-muted); font-size: 0.91rem; }
+        .pm-header-meta {
+            min-width: 310px;
+            display: grid;
+            grid-template-columns: 48px 1fr;
+            gap: 0 16px;
+            align-items: center;
+            padding-left: 22px;
+            border-left: 1px solid rgba(40, 69, 111, 0.27);
+            color: #aeb8ca;
+            font-size: 0.84rem;
+        }
+        .pm-header-bell {
+            grid-row: 1 / span 2;
+            position: relative;
+            font-size: 1.55rem;
+            color: #dce5f4;
+        }
+        .pm-header-bell::after {
+            content: "";
+            position: absolute;
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: #1875ff;
+            top: 3px;
+            right: 12px;
+            box-shadow: 0 0 10px rgba(24,117,255,.7);
+        }
+        .pm-header-line { display: flex; align-items: center; gap: 11px; min-height: 28px; }
+        .pm-header-line b { color: #8eb3ff; font-weight: 500; font-size: 1.1rem; }
+
+        .pm-context-card {
+            min-height: 180px;
+            display: grid;
+            grid-template-columns: minmax(360px, 0.95fr) minmax(360px, 1.05fr);
+            align-items: center;
+            gap: 20px;
+            padding: 18px 28px;
+            border: 1px solid var(--bp-border);
+            border-radius: 13px;
+            background: linear-gradient(105deg, rgba(3,13,29,.98), rgba(3,14,32,.94));
+            overflow: hidden;
+        }
+        .pm-context-copy { display: grid; grid-template-columns: 42px 1fr; gap: 18px; align-items: start; }
+        .pm-context-icon {
+            width: 30px;
+            height: 30px;
+            display: grid;
+            place-items: center;
+            border-radius: 50%;
+            background: #116cff;
+            color: #07142d;
+            font-weight: 900;
+            box-shadow: 0 0 20px rgba(17,108,255,.35);
+        }
+        .pm-context-label { color: #1875ff; font-weight: 800; font-size: 1.05rem; letter-spacing: .02em; }
+        .pm-context-name { margin-top: 21px; color: #fff; font-size: 1.04rem; font-weight: 650; }
+        .pm-context-description { margin-top: 3px; color: var(--bp-muted); font-size: 0.86rem; }
+        .pm-context-art { height: 140px; width: 100%; opacity: .96; }
+
+        .pm-reference-grid {
+            display: grid;
+            grid-template-columns: .95fr 1.03fr 1.06fr;
+            gap: 13px;
+        }
+        .pm-reference-card {
+            min-height: 278px;
+            padding: 20px 16px 16px;
+            border: 1px solid var(--bp-border);
+            border-radius: 13px;
+            background: rgba(3, 13, 29, 0.95);
+        }
+        .pm-reference-heading {
+            display: grid;
+            grid-template-columns: 38px 1fr;
+            gap: 10px;
+            align-items: start;
+            margin-bottom: 17px;
+        }
+        .pm-reference-icon {
+            width: 34px;
+            height: 34px;
+            display: grid;
+            place-items: center;
+            border-radius: 7px;
+            background: rgba(13, 84, 215, 0.12);
+            color: #1472ff;
+            font-size: 1.2rem;
+            box-shadow: 0 0 20px rgba(20,114,255,.12);
+        }
+        .pm-reference-title { color: #fff; font-weight: 800; font-size: .91rem; text-transform: uppercase; }
+        .pm-reference-subtitle { margin-top: 6px; color: var(--bp-muted); font-size: .78rem; line-height: 1.55; }
+        .pm-reference-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            min-height: 60px;
+            padding: 10px 12px;
+            border: 1px solid var(--bp-border-soft);
+            border-radius: 10px;
+            background: rgba(5, 18, 39, 0.72);
+        }
+        .pm-reference-row + .pm-reference-row { margin-top: 10px; }
+        .pm-reference-row-main { min-width: 0; color: #fff; font-size: .82rem; }
+        .pm-reference-row-main small { display: block; margin-top: 3px; color: #7f8ca4; font-size: .69rem; }
+        .pm-reference-status {
+            flex: 0 0 auto;
+            padding: 6px 12px;
+            border: 1px solid rgba(17,201,104,.18);
+            border-radius: 999px;
+            background: rgba(17,201,104,.06);
+            color: var(--bp-green);
+            font-size: .72rem;
+            font-weight: 700;
+        }
+        .pm-reference-note { margin-top: 14px; color: #7f8ca4; font-size: .72rem; }
+        .pm-reference-note.ok::before { content: "●"; color: var(--bp-green); margin-right: 8px; }
+        .pm-reference-link { margin-top: 14px; color: #1c76ff; font-size: .76rem; }
+
+        .pm-system-overview,
+        .pm-download-card {
+            padding: 18px;
+            border: 1px solid var(--bp-border);
+            border-radius: 13px;
+            background: rgba(3, 13, 29, 0.95);
+        }
+        .pm-section-title { display:flex; align-items:center; gap:12px; color:#fff; font-size:.91rem; font-weight:800; text-transform:uppercase; }
+        .pm-section-title span { color:#1472ff; font-size:1.2rem; }
+        .pm-metric-grid { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); margin-top:14px; }
+        .pm-metric { min-height:92px; padding: 4px 19px 2px; border-left:1px solid rgba(31,58,96,.34); }
+        .pm-metric:first-child { border-left:0; }
+        .pm-metric-label { color:#9aa6bb; font-size:.78rem; }
+        .pm-metric-value { margin-top:3px; color:#fff; font-size:1.65rem; line-height:1.15; letter-spacing:-.035em; }
+        .pm-metric-note { margin-top:7px; color:#8b97ad; font-size:.69rem; }
+        .pm-metric-note.good { color:var(--bp-green); }
+        .pm-download-card { padding-bottom: 12px; }
+        .pm-download-description { margin:5px 0 13px 38px; color:#8d99b0; font-size:.76rem; }
+        div[data-testid="stColumn"]:has(.pm-main-marker) [data-testid="stDownloadButton"] > button,
+        div[data-testid="stColumn"]:has(.pm-main-marker) [data-testid="stButton"] > button[aria-label*="Baixar última diária"] {
+            min-height: 52px !important;
+            border-radius: 8px !important;
+            background: linear-gradient(90deg, #e3132c, #d8182f) !important;
+            border: 1px solid #f0263d !important;
+            color: #fff !important;
+            font-weight: 750 !important;
+            box-shadow: none !important;
+        }
+        .pm-dashboard-footer { padding: 0 0 3px; color:#748198; font-size:.69rem; text-align:center; }
+
+        @media (max-width: 1180px) {
+            div[data-testid="stColumn"]:has(.pm-sidebar-brand) { flex-basis: 220px !important; min-width: 205px !important; }
+            .pm-sidebar-name { font-size: 1.02rem; }
+            .pm-sidebar-tagline { font-size: .48rem; }
+            .pm-context-card { grid-template-columns: 1fr .85fr; }
+            .pm-reference-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
+            .pm-reference-card:last-child { grid-column:1 / -1; min-height:auto; }
+            .pm-metric-grid { grid-template-columns:repeat(3,minmax(0,1fr)); }
+            .pm-metric:nth-child(4) { border-left:0; }
+        }
+        @media (max-width: 850px) {
+            div[data-testid="stHorizontalBlock"]:has(.pm-sidebar-brand) { flex-direction: column !important; }
+            div[data-testid="stColumn"]:has(.pm-sidebar-brand) { min-width:100% !important; max-width:none !important; flex:1 1 auto !important; }
+            div[data-testid="stColumn"]:has(.pm-sidebar-brand) div[data-testid="stVerticalBlock"]:has(.pm-sidebar-brand) {
+                min-height:auto;
+                display:grid !important;
+                grid-template-columns:repeat(2,minmax(0,1fr));
+                gap:6px !important;
+            }
+            div[data-testid="stColumn"]:has(.pm-sidebar-brand) div[data-testid="stElementContainer"]:has(.pm-sidebar-brand) { grid-column:1 / -1; }
+            div[data-testid="stColumn"]:has(.pm-sidebar-brand) div[data-testid="stElementContainer"]:has(.pm-user-card),
+            div[data-testid="stColumn"]:has(.pm-sidebar-brand) div[data-testid="stElementContainer"]:has(.pm-version) { display:none !important; }
+            .pm-sidebar-brand { min-height:auto; }
+            .pm-sidebar-spacer, .pm-user-card, .pm-version { display:none; }
+            div[data-testid="stColumn"]:has(.pm-sidebar-brand) [data-testid="stButton"] { width:100%; }
+            div[data-testid="stColumn"]:has(.pm-sidebar-brand) [data-testid="stButton"] button { min-height:42px !important; padding:0 9px !important; font-size:.78rem !important; }
+            div[data-testid="stColumn"]:has(.pm-sidebar-brand) [data-testid="stButton"] button p { text-align:center; }
+            .pm-dashboard-header { grid-template-columns:1fr; min-height:auto; }
+            .pm-header-meta { min-width:0; padding:10px 0 0; border-left:0; border-top:1px solid rgba(40,69,111,.27); }
+            .pm-context-card { grid-template-columns:1fr; min-height:auto; }
+            .pm-context-art { height:105px; }
+            .pm-reference-grid { grid-template-columns:1fr; }
+            .pm-reference-card:last-child { grid-column:auto; }
+            .pm-metric-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+            .pm-metric:nth-child(odd) { border-left:0; }
+            .pm-metric:nth-child(4) { border-left:1px solid rgba(31,58,96,.34); }
+        }
+        @media (max-width: 540px) {
+            .block-container { padding:.45rem !important; }
+            .pm-dashboard-header { padding:15px; }
+            .pm-dashboard-title { font-size:1.18rem; }
+            .pm-context-card { padding:16px; }
+            .pm-context-copy { grid-template-columns:30px 1fr; gap:10px; }
+            .pm-context-name { margin-top:12px; }
+            .pm-context-art { display:none; }
+            .pm-reference-grid { gap:9px; }
+            .pm-reference-card { min-height:auto; padding:15px 12px; }
+            .pm-metric-grid { grid-template-columns:1fr; }
+            .pm-metric, .pm-metric:nth-child(4) { border-left:0; border-top:1px solid rgba(31,58,96,.34); padding:12px 8px; }
+            .pm-metric:first-child { border-top:0; }
+            .pm-download-description { margin-left:0; }
+        }
         </style>
         """,
         unsafe_allow_html=True,
@@ -1166,7 +1548,7 @@ def _download_bytes(path: str, timeout: int = 60) -> tuple[bool, bytes, str]:
 
 def _build_template_xlsx_bytes() -> tuple[bool, bytes, str]:
     """Retorna a planilha modelo fixa para download."""
-    template_path = Path(r"C:\Users\daniel.avila\Desktop\modelo.xlsx")
+    template_path = Path(__file__).resolve().parent.parent / "Modelo.xlsx"
     if not template_path.is_file():
         return False, b"", f"Planilha modelo nao encontrada em: {template_path}"
     try:
@@ -1578,20 +1960,22 @@ def _render_native_panel() -> None:
     def _esc(value: object) -> str:
         return html.escape(str(value or "").strip())
 
-    st.markdown(
-        f"""
-        <div class="pm-topbar">
-          <div class="pm-brand">
-            <div class="pm-mark">BP</div>
-            <div style="min-width:0">
-              <div class="pm-title">{UI_BRAND_NAME}</div>
-            </div>
-          </div>
-          <div class="pm-actions"></div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
+    def _fmt_timestamp(value: object) -> str:
+        try:
+            stamp = float(value or 0)
+            if stamp <= 0:
+                return "-"
+            return datetime.fromtimestamp(stamp, tz=ZoneInfo("America/Sao_Paulo")).strftime("%d/%m/%Y %H:%M:%S")
+        except (TypeError, ValueError, OSError):
+            return "-"
+
+    def _job_duration_seconds(job: dict) -> float:
+        try:
+            start = float(job.get("started_at") or job.get("created_at") or 0)
+            end = float(job.get("finished_at") or 0)
+            return max(0.0, end - start) if start and end else 0.0
+        except (TypeError, ValueError):
+            return 0.0
 
     ok, _, overview, message = _request_json("GET", "/api/overview", timeout=8)
     if not ok:
@@ -1603,66 +1987,226 @@ def _render_native_panel() -> None:
     running = int(counts.get("RUNNING") or 0)
     done = int(counts.get("DONE") or 0)
     failed = int(counts.get("FAILED") or 0)
+    schedule_ok, _, schedule, _ = _request_json("GET", "/api/daily/latest", timeout=8)
+    if not schedule_ok or not isinstance(schedule, dict):
+        schedule = {}
 
-    st.markdown(
-        f"""
-        <div class="pm-kpi-grid" style="margin-top: 12px;">
-          <div class="pm-kpi pm-tone-wait"><p>Em fila</p><strong>{queued}</strong></div>
-          <div class="pm-kpi pm-tone-run"><p>Em execução</p><strong>{running}</strong></div>
-          <div class="pm-kpi pm-tone-done"><p>Concluídos</p><strong>{done}</strong></div>
-          <div class="pm-kpi pm-tone-fail"><p>Falhas</p><strong>{failed}</strong></div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-
-    st.markdown('<div class="pm-layout">', unsafe_allow_html=True)
-
-    nav_col, main_col = st.columns([0.25, 0.75], gap="large")
+    nav_col, main_col = st.columns([0.18, 0.82], gap="small")
 
     with nav_col:
-        st.markdown('<div class="pm-glass pm-sidebar">', unsafe_allow_html=True)
-        st.markdown('<div class="pm-nav-title">Navegação</div>', unsafe_allow_html=True)
+        st.markdown(
+            """
+            <div class="pm-sidebar-brand">
+              <div class="pm-sidebar-logo">$</div>
+              <div>
+                <div class="pm-sidebar-name">BUSCA <span>PREÇO</span></div>
+                <div class="pm-sidebar-tagline">INTELIGÊNCIA EM PREÇOS</div>
+              </div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+        def _set_view(target_view: str) -> None:
+            st.session_state["pm_view"] = target_view
 
         def _nav_button(label: str, view: str) -> None:
             active = st.session_state.get("pm_view") == view
-            if st.button(
+            st.button(
                 label,
                 type="primary" if active else "secondary",
                 use_container_width=True,
                 key=f"pm_nav_{view}",
-            ):
-                st.session_state["pm_view"] = view
-                st.rerun()
+                on_click=_set_view,
+                args=(view,),
+            )
 
-        _nav_button("Resumo", "overview")
-        _nav_button("Execução Manual", "run")
-        _nav_button("Status", "status")
+        _nav_button("⌂  Resumo", "overview")
+        _nav_button("▷  Execução Manual", "run")
+        _nav_button("⌁  Status", "status")
+        _nav_button("◷  Histórico de Jobs", "history")
+        _nav_button("⇩  Downloads", "downloads")
+        _nav_button("⚙  Configurações", "settings")
+        _nav_button("?  Ajuda", "help")
 
-        st.markdown('<div class="pm-help">', unsafe_allow_html=True)
-        st.markdown("</div>", unsafe_allow_html=True)
-        st.markdown("</div>", unsafe_allow_html=True)
+        current_user = _session_user()
+        username = str(current_user.get("username") or "").strip()
+        display_name = _esc(current_user.get("display_name") or ("Daniel Avila" if username.lower() == "admin" else username) or "Daniel Avila")
+        raw_role = str(current_user.get("role") or "").strip()
+        display_role = _esc("Administrador" if raw_role.lower() in {"admin", "administrator"} else raw_role or "Administrador")
+        st.markdown(
+            f"""
+            <div class="pm-sidebar-spacer"></div>
+            <div class="pm-user-card">
+              <div class="pm-user-avatar">●</div>
+              <div><div class="pm-user-name">{display_name}</div><div class="pm-user-role">{display_role}</div></div>
+            </div>
+            <div class="pm-version">Versão 1.0.0</div>
+            """,
+            unsafe_allow_html=True,
+        )
 
     with main_col:
+        st.markdown('<span class="pm-main-marker"></span>', unsafe_allow_html=True)
         view = str(st.session_state.get("pm_view") or "overview")
 
-        path_title = "Painel / Resumo"
-        if view == "run":
-            path_title = "Painel / Execução Manual"
-        elif view == "status":
-            path_title = "Painel / Status"
+        view_titles = {
+            "overview": ("Painel / Resumo", "Visão geral do sistema Busca Preço"),
+            "run": ("Painel / Execução Manual", "Inicie uma nova pesquisa de preços"),
+            "status": ("Painel / Status", "Acompanhe o processamento em tempo real"),
+            "history": ("Painel / Histórico de Jobs", "Consulte as execuções mais recentes"),
+            "downloads": ("Painel / Downloads", "Baixe os resultados processados"),
+            "settings": ("Painel / Configurações", "Preferências e integrações do sistema"),
+            "help": ("Painel / Ajuda", "Orientações para utilizar o Busca Preço"),
+        }
+        path_title, path_subtitle = view_titles.get(view, view_titles["overview"])
+        now_br = datetime.now(ZoneInfo("America/Sao_Paulo"))
+        month_names = (
+            "janeiro", "fevereiro", "março", "abril", "maio", "junho",
+            "julho", "agosto", "setembro", "outubro", "novembro", "dezembro",
+        )
+        date_label = f"{now_br.day:02d} de {month_names[now_br.month - 1].title()}, {now_br.year}"
+        next_run_time = str(schedule.get("next_run_time") or AUTO_DAILY_UPDATE_TIME).strip()
+        next_run_note = f"Próxima rotina às {next_run_time}"
+        try:
+            next_run_at = datetime.fromtimestamp(float(schedule.get("next_run_at") or 0), tz=ZoneInfo("America/Sao_Paulo"))
+            day_label = "Hoje" if next_run_at.date() == now_br.date() else "Amanhã"
+            next_run_note = f"{day_label} às {next_run_time}"
+        except (TypeError, ValueError, OSError):
+            pass
 
         st.markdown(
             f"""
-            <div class="pm-pathbar pm-glass">
-              <p class="pm-kicker">Contexto</p>
-              <strong>{path_title}</strong>
+            <div class="pm-dashboard-header">
+              <div>
+                <div class="pm-dashboard-title">{_esc(path_title)}</div>
+                <div class="pm-dashboard-subtitle">{_esc(path_subtitle)}</div>
+              </div>
+              <div class="pm-header-meta">
+                <div class="pm-header-bell">♧</div>
+                <div class="pm-header-line"><b>□</b><span>{date_label}</span></div>
+                <div class="pm-header-line"><b>◷</b><span>{now_br.strftime('%H:%M:%S')}</span></div>
+              </div>
             </div>
             """,
             unsafe_allow_html=True,
         )
 
         if view == "overview":
+            latest_manual = overview.get("latest_manual_job") if isinstance(overview.get("latest_manual_job"), dict) else {}
+            latest_daily = overview.get("latest_daily_job") if isinstance(overview.get("latest_daily_job"), dict) else {}
+            has_default_input = bool(overview.get("has_default_input"))
+            latest_manual_id = str(latest_manual.get("job_id") or "").strip() or "-"
+            latest_daily_id = str(latest_daily.get("job_id") or "").strip() or "-"
+            latest_manual_time = _fmt_timestamp(latest_manual.get("created_at"))
+            latest_daily_time = _fmt_timestamp(latest_daily.get("created_at"))
+            latest_check = latest_manual_time if latest_manual_time != "-" else latest_daily_time
+            total_jobs = queued + running + done + failed + int(counts.get("STOPPED") or 0)
+            finished_jobs = done + failed
+            success_rate = (done / finished_jobs * 100.0) if finished_jobs else 0.0
+            durations = [
+                duration
+                for duration in (_job_duration_seconds(latest_manual), _job_duration_seconds(latest_daily))
+                if duration > 0
+            ]
+            avg_seconds = int(sum(durations) / len(durations)) if durations else 0
+            avg_duration = f"{avg_seconds // 60:02d}:{avg_seconds % 60:02d}"
+
+            st.markdown(
+                f"""
+                <section class="pm-context-card">
+                  <div class="pm-context-copy">
+                    <div class="pm-context-icon">i</div>
+                    <div>
+                      <div class="pm-context-label">CONTEXTO</div>
+                      <div class="pm-context-name">Painel / Resumo</div>
+                      <div class="pm-context-description">Resumo geral das informações e status do sistema.</div>
+                    </div>
+                  </div>
+                  <svg class="pm-context-art" viewBox="0 0 620 170" aria-hidden="true">
+                    <defs>
+                      <linearGradient id="bpBar" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#1268ff"/><stop offset="1" stop-color="#07328f"/></linearGradient>
+                      <radialGradient id="bpGlow"><stop stop-color="#1268ff" stop-opacity=".38"/><stop offset="1" stop-color="#1268ff" stop-opacity="0"/></radialGradient>
+                    </defs>
+                    <ellipse cx="380" cy="90" rx="235" ry="84" fill="url(#bpGlow)" opacity=".34"/>
+                    <g opacity=".38" stroke="#1268ff" fill="none"><path d="M300 131H590M320 111H570M342 91H552M365 71H530"/><path d="M335 45L405 145M390 35L450 145M445 31L495 145M500 42L540 145"/></g>
+                    <g fill="url(#bpBar)" stroke="#2480ff"><path d="M50 122V82l26-8v48z"/><path d="M88 122V58l27-9v73z"/><path d="M128 122V31l27-10v101z"/></g>
+                    <g transform="translate(184 28)"><circle cx="65" cy="61" r="48" fill="#07245e" stroke="#1268ff" stroke-width="8"/><circle cx="65" cy="61" r="35" fill="#06183b" stroke="#0b4fce"/><text x="65" y="78" text-anchor="middle" fill="#1675ff" font-size="50" font-weight="800">$</text><path d="M98 98l42 42" stroke="#0b3d9f" stroke-width="15" stroke-linecap="round"/></g>
+                    <g transform="translate(352 17)" fill="none" stroke="#1268ff" stroke-width="1.2" opacity=".82"><path d="M23 19l31-10 31 12 25-8 33 15 18 24-19 13 8 25-23 8-13 28-31-6-20 9-25-17-16-35 11-24z"/><path d="M54 9l8 35 31 9 17-40M62 44L38 71l25 49M93 53l-10 35 31 38M110 53l32 12M83 88l47 2"/></g>
+                    <g fill="#1472ff"><circle cx="516" cy="57" r="6"/><circle cx="564" cy="101" r="6"/><circle cx="470" cy="115" r="6"/><path d="M516 33c-11 0-19 8-19 19 0 15 19 32 19 32s19-17 19-32c0-11-8-19-19-19zm0 25a7 7 0 110-14 7 7 0 010 14z"/><path d="M577 74c-10 0-18 8-18 18 0 14 18 30 18 30s18-16 18-30c0-10-8-18-18-18zm0 23a6 6 0 110-12 6 6 0 010 12z"/></g>
+                  </svg>
+                </section>
+
+                <section class="pm-reference-grid">
+                  <article class="pm-reference-card">
+                    <div class="pm-reference-heading"><div class="pm-reference-icon">□</div><div><div class="pm-reference-title">Arquivos</div><div class="pm-reference-subtitle">Arquivo utilizado para a importação<br/>e processamento dos dados.</div></div></div>
+                    <div class="pm-reference-row"><div class="pm-reference-row-main">▣ &nbsp; input.xlsx padrão</div><span class="pm-reference-status">{'Disponível' if has_default_input else 'Ausente'}</span></div>
+                    <div class="pm-reference-note">Última verificação: {_esc(latest_check)}</div>
+                  </article>
+
+                  <article class="pm-reference-card">
+                    <div class="pm-reference-heading"><div class="pm-reference-icon">◷</div><div><div class="pm-reference-title">Últimos Jobs</div><div class="pm-reference-subtitle">Últimas execuções realizadas pelo sistema.</div></div></div>
+                    <div class="pm-reference-row"><div class="pm-reference-row-main">Manual<small>{_esc(latest_manual_time)}</small></div><div class="pm-reference-row-main">{_esc(latest_manual_id)} &nbsp; <span style="color:#11c968">✓</span></div></div>
+                    <div class="pm-reference-row"><div class="pm-reference-row-main">Diário<small>{_esc(latest_daily_time)}</small></div><div class="pm-reference-row-main">{_esc(latest_daily_id)} &nbsp; <span style="color:#11c968">✓</span></div></div>
+                    <div class="pm-reference-link">Ver histórico completo &nbsp; →</div>
+                  </article>
+
+                  <article class="pm-reference-card">
+                    <div class="pm-reference-heading"><div class="pm-reference-icon">⌁</div><div><div class="pm-reference-title">Conexão</div><div class="pm-reference-subtitle">Status da conexão com API e tokens.</div></div></div>
+                    <div class="pm-reference-row"><div class="pm-reference-row-main">API</div><span class="pm-reference-status">Ativo</span></div>
+                    <div class="pm-reference-row"><div class="pm-reference-row-main">Token</div><span class="pm-reference-status">{'OK' if bool(API_TOKEN) else 'Ausente'}</span></div>
+                    <div class="pm-reference-note ok">Conexão verificada: {_esc(now_br.strftime('%d/%m/%Y %H:%M'))}</div>
+                  </article>
+                </section>
+
+                <section class="pm-system-overview">
+                  <div class="pm-section-title"><span>⌁</span> Visão geral do sistema</div>
+                  <div class="pm-metric-grid">
+                    <div class="pm-metric"><div class="pm-metric-label">Arquivos processados</div><div class="pm-metric-value">{done}</div><div class="pm-metric-note good">Concluídos com sucesso</div></div>
+                    <div class="pm-metric"><div class="pm-metric-label">Execuções realizadas</div><div class="pm-metric-value">{total_jobs}</div><div class="pm-metric-note">{running} em execução · {queued} em fila</div></div>
+                    <div class="pm-metric"><div class="pm-metric-label">Tempo médio</div><div class="pm-metric-value">{avg_duration}</div><div class="pm-metric-note">Por execução recente</div></div>
+                    <div class="pm-metric"><div class="pm-metric-label">Taxa de sucesso</div><div class="pm-metric-value">{success_rate:.1f}%</div><div class="pm-metric-note good">{failed} falha(s) registrada(s)</div></div>
+                    <div class="pm-metric"><div class="pm-metric-label">Próxima execução</div><div class="pm-metric-value">Diária</div><div class="pm-metric-note">{_esc(next_run_note)}</div></div>
+                  </div>
+                </section>
+
+                <section class="pm-download-card">
+                  <div class="pm-section-title"><span>⇩</span> Downloads</div>
+                  <div class="pm-download-description">Disponibilize a última planilha diária já processada para testes e validações.</div>
+                </section>
+                """,
+                unsafe_allow_html=True,
+            )
+
+            can_download_daily_job = latest_daily_id != "-"
+            ok_dl, content, error = _prepare_download_by_path("/download/daily/fixed")
+            filename = _daily_result_filename()
+            if (not ok_dl or not content) and can_download_daily_job:
+                ok_dl, content, error = _prepare_download_for_job(latest_daily_id)
+                filename = _daily_result_filename()
+
+            if ok_dl and content:
+                st.download_button(
+                    "⇩  Baixar última diária (.xlsx)",
+                    data=content,
+                    file_name=filename,
+                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    type="primary",
+                    use_container_width=True,
+                )
+            else:
+                st.button(
+                    "⇩  Baixar última diária (.xlsx)",
+                    type="primary",
+                    use_container_width=True,
+                    disabled=True,
+                )
+                if error:
+                    st.caption("Arquivo diário indisponível no momento.")
+
+            st.markdown('<div class="pm-dashboard-footer">Busca Preço © 2026 · Todos os direitos reservados.</div>', unsafe_allow_html=True)
+
+        elif view == "_legacy_overview":
             st.markdown('<div class="pm-glass pm-panel">', unsafe_allow_html=True)
             st.markdown('<p class="pm-kicker">Resumo</p>', unsafe_allow_html=True)
             latest_manual = overview.get("latest_manual_job") if isinstance(overview.get("latest_manual_job"), dict) else {}
@@ -1845,7 +2389,78 @@ def _render_native_panel() -> None:
 
             st.markdown("</div>", unsafe_allow_html=True)
 
-        else:
+        elif view == "history":
+            latest_manual = overview.get("latest_manual_job") if isinstance(overview.get("latest_manual_job"), dict) else {}
+            latest_daily = overview.get("latest_daily_job") if isinstance(overview.get("latest_daily_job"), dict) else {}
+            history_rows = []
+            for label, job in (("Manual", latest_manual), ("Diário", latest_daily)):
+                if not job:
+                    continue
+                history_rows.append(
+                    f'<div class="pm-reference-row"><div class="pm-reference-row-main">{label}'
+                    f'<small>{_esc(_fmt_timestamp(job.get("created_at")))}</small></div>'
+                    f'<div class="pm-reference-row-main">{_esc(job.get("job_id") or "-")} &nbsp; '
+                    f'<span class="pm-reference-status">{_esc(job.get("status") or "-")}</span></div></div>'
+                )
+            st.markdown(
+                '<section class="pm-reference-card" style="min-height:260px">'
+                '<div class="pm-reference-heading"><div class="pm-reference-icon">◷</div>'
+                '<div><div class="pm-reference-title">Histórico de Jobs</div>'
+                '<div class="pm-reference-subtitle">Execuções mais recentes registradas pelo sistema.</div></div></div>'
+                + ("".join(history_rows) or '<div class="pm-reference-note">Nenhuma execução encontrada.</div>')
+                + "</section>",
+                unsafe_allow_html=True,
+            )
+
+        elif view == "downloads":
+            latest_daily = overview.get("latest_daily_job") if isinstance(overview.get("latest_daily_job"), dict) else {}
+            latest_daily_id = str(latest_daily.get("job_id") or "").strip() or "-"
+            st.markdown(
+                '<section class="pm-download-card"><div class="pm-section-title"><span>⇩</span> Downloads</div>'
+                '<div class="pm-download-description">Baixe a última planilha diária processada pelo sistema.</div></section>',
+                unsafe_allow_html=True,
+            )
+            ok_dl, content, error = _prepare_download_by_path("/download/daily/fixed")
+            if (not ok_dl or not content) and latest_daily_id != "-":
+                ok_dl, content, error = _prepare_download_for_job(latest_daily_id)
+            if ok_dl and content:
+                st.download_button(
+                    "⇩  Baixar última diária (.xlsx)",
+                    data=content,
+                    file_name=_daily_result_filename(),
+                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    type="primary",
+                    use_container_width=True,
+                )
+            else:
+                st.button("⇩  Baixar última diária (.xlsx)", disabled=True, use_container_width=True)
+                st.caption(error or "Arquivo diário indisponível no momento.")
+
+        elif view == "settings":
+            st.markdown(
+                '<section class="pm-reference-card" style="min-height:220px">'
+                '<div class="pm-reference-heading"><div class="pm-reference-icon">⚙</div>'
+                '<div><div class="pm-reference-title">Configurações</div>'
+                '<div class="pm-reference-subtitle">A API, o token e a programação automática são administrados pelo servidor.</div></div></div>'
+                f'<div class="pm-reference-row"><div class="pm-reference-row-main">API</div><span class="pm-reference-status">Ativa</span></div>'
+                f'<div class="pm-reference-row"><div class="pm-reference-row-main">Token</div><span class="pm-reference-status">{"Configurado" if API_TOKEN else "Ausente"}</span></div>'
+                '</section>',
+                unsafe_allow_html=True,
+            )
+
+        elif view == "help":
+            st.markdown(
+                '<section class="pm-reference-card" style="min-height:250px">'
+                '<div class="pm-reference-heading"><div class="pm-reference-icon">?</div>'
+                '<div><div class="pm-reference-title">Ajuda</div><div class="pm-reference-subtitle">Fluxo rápido para executar uma pesquisa.</div></div></div>'
+                '<div class="pm-reference-row"><div class="pm-reference-row-main">1. Acesse Execução Manual e escolha a base padrão ou envie sua planilha.</div></div>'
+                '<div class="pm-reference-row"><div class="pm-reference-row-main">2. Inicie o processamento e acompanhe a evolução em Status.</div></div>'
+                '<div class="pm-reference-row"><div class="pm-reference-row-main">3. Ao finalizar, baixe o resultado em Downloads.</div></div>'
+                '</section>',
+                unsafe_allow_html=True,
+            )
+
+        elif view == "status":
             st.markdown('<div class="pm-glass pm-panel">', unsafe_allow_html=True)
             st.markdown('<p class="pm-kicker">Status em tempo real</p>', unsafe_allow_html=True)
             st.subheader("Acompanhamento do job")
@@ -1972,27 +2587,12 @@ def _render_native_panel() -> None:
 
             st.markdown("</div>", unsafe_allow_html=True)
 
-    st.markdown("</div>", unsafe_allow_html=True)
-
+        else:
+            st.session_state["pm_view"] = "overview"
+            st.rerun()
 
 _require_login()
 _render_shell_css()
-
-st.markdown(
-    f"""
-    <div class="pm-auto-banner" role="status" aria-live="polite">
-      <div class="pm-auto-banner__left">
-        <div class="pm-auto-banner__icon" aria-hidden="true">!</div>
-        <div class="pm-auto-banner__text">
-          <p class="pm-auto-banner__title">Atualização automática diária</p>
-          <p class="pm-auto-banner__subtitle">O sistema atualiza todos os dias às <strong>{html.escape(AUTO_DAILY_UPDATE_TIME)}</strong> da manhã (horário de Brasília).</p>
-        </div>
-      </div>
-      <div class="pm-auto-banner__time">{html.escape(AUTO_DAILY_UPDATE_TIME)}</div>
-    </div>
-    """,
-    unsafe_allow_html=True,
-)
 
 api_ok, api_error = _validate_api_base()
 if not api_ok:

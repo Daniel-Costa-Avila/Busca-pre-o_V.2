@@ -11,6 +11,7 @@ runs/
 debug_magalu/
 App/logs/
 run_status.txt
+supervisor-runtime/
 
 # Local browser profiles / automation state
 chrome_profile_magalu/
