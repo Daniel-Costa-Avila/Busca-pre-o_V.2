@@ -189,6 +189,23 @@ Diagnóstico Magalu:
 
 ---
 
+### 7.1.1) Zema (mesma estratégia anti-bloqueio da Magalu)
+
+A Zema reaproveita o kit anti-bloqueio da Magalu: throttle com jitter, circuit breaker e fila de retentativa após a execução. O coletor já detecta captcha/challenge/cloudflare e faz fallback automático para outro navegador do pool antes de marcar como bloqueado.
+
+- `ZEMA_THROTTLE_SECONDS=0` (default `0` = sem throttle fixo)
+- `ZEMA_THROTTLE_MIN_SECONDS` / `ZEMA_THROTTLE_MAX_SECONDS` (recomendado: jitter em vez de delay fixo)
+- `ZEMA_BLOCKED_STREAK_THRESHOLD=3` (bloqueios seguidos até abrir o circuit breaker)
+- `ZEMA_BLOCKED_COOLDOWN_SECONDS=70` (tempo de espera com o circuito aberto)
+- `ZEMA_BLOCKED_WAIT_SECONDS=65` / `ZEMA_BLOCKED_RETRIES=0` (retentativa após a fila principal; desativada por padrão, igual à Magalu)
+- `ZEMA_RETRY_MAX_ITEMS=60` (limite de itens reprocessados na fila de retentativa)
+
+Diagnóstico Zema:
+- Em caso de bloqueio/challenge, o sistema salva HTML + screenshot em `debug_zema\\` para análise.
+- Estratégia implementada: quando detectar bloqueio, o item é marcado, a fila segue para o próximo produto e uma nova tentativa ocorre depois de aguardar (`ZEMA_BLOCKED_WAIT_SECONDS`, `ZEMA_BLOCKED_RETRIES`), igual ao fluxo da Magalu.
+
+---
+
 ### 7.2) Watchdog (evitar travar a fila)
 
 Para evitar que a execução fique **pausada por muito tempo** (ex.: bloqueio do site, navegador travado, rede lenta),

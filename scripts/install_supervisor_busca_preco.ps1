@@ -36,6 +36,11 @@ if ($tokenLine) {
     ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }
 }
 
+# Uma reinstalacao/reinicializacao administrativa e intencional deve iniciar um
+# novo ciclo de recuperacao, sem herdar o limite de tentativas do processo anterior.
+$stateFile = Join-Path $appDirectory 'supervisor-runtime\state.json'
+Remove-Item -LiteralPath $stateFile -Force -ErrorAction SilentlyContinue
+
 $action = New-ScheduledTaskAction -Execute $powerShell -Argument "-NoProfile -NonInteractive -ExecutionPolicy Bypass -WindowStyle Hidden -File `"$supervisor`"" -WorkingDirectory $appDirectory
 $trigger = New-ScheduledTaskTrigger -AtStartup
 $settings = New-ScheduledTaskSettingsSet -ExecutionTimeLimit ([TimeSpan]::Zero) -RestartCount 3 -RestartInterval (New-TimeSpan -Minutes 1) -StartWhenAvailable -MultipleInstances IgnoreNew

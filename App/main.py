@@ -14,6 +14,7 @@ import subprocess
 from datetime import datetime
 from pathlib import Path
 from typing import Callable, Optional
+from urllib.parse import urlparse
 
 from openpyxl import load_workbook, Workbook
 from openpyxl.worksheet.worksheet import Worksheet
@@ -33,7 +34,6 @@ from App.collectors.magalu import coletar as coletar_magalu, close_magalu_seleni
 from App.collectors.zema import coletar as coletar_zema
 from App.collectors.madeiramadeira import coletar as coletar_madeiramadeira
 from App.collectors.probel import coletar as coletar_probel
-from App.collectors.carrefour import coletar as coletar_carrefour
 from App.collectors.mercadolivre import coletar as coletar_mercadolivre
 from App.collectors.casasbahia import coletar as coletar_casasbahia
 from App.utils.browser import get_driver, resolve_browser_pool
@@ -189,9 +189,6 @@ def resolve_collector(link: str) -> Optional[CollectorFn]:
     if "madeiramadeira" in l:
         return coletar_madeiramadeira
 
-    if "carrefour" in l:
-        return coletar_carrefour
-
     if "probel" in l:
         return coletar_probel
 
@@ -208,7 +205,23 @@ def find_col(ws: Worksheet, names: set[str]) -> Optional[int]:
     return None
 
 
-def extract_url_from_cell(cell) -> str:
+def _is_bare_domain_url(url: str) -> bool:
+    """
+    Detecta URL "raiz" (sem caminho de produto), ex.: extraida de uma formula
+    CONCATENATE truncada no fechamento das aspas antes do SKU dinamico.
+    Uma URL assim e igual para varias linhas e nao deve ser usada para deduplicar
+    produtos diferentes.
+    """
+    try:
+        parsed = urlparse(str(url or "").strip())
+    except Exception:
+        return False
+    if not parsed.scheme or not parsed.netloc:
+        return False
+    return not (parsed.path or "").strip("/") and not parsed.query
+
+
+def extract_url_from_cell(cell, cached_value: object = None) -> str:
     def _extract_url_from_text(raw: object) -> str:
         text = str(raw or "").strip()
         if not text:
@@ -224,15 +237,36 @@ def extract_url_from_cell(cell) -> str:
 
         return ""
 
+    raw_value = cell.value
+    is_formula = isinstance(raw_value, str) and raw_value.strip().startswith("=")
+
+    # Formulas como CONCATENATE(...)/"&" nao sao avaliadas aqui: o regex so enxerga o
+    # texto literal da formula e trunca no primeiro fechamento de aspas (ex.: URL sem o
+    # SKU dinamico, igual para varias linhas). Nesses casos preferimos o valor ja
+    # calculado pelo Excel (cache), que traz a URL completa e correta por linha.
+    if is_formula and "HYPERLINK(" not in raw_value.upper():
+        cached_url = _extract_url_from_text(cached_value)
+        if cached_url and not _is_bare_domain_url(cached_url):
+            return cached_url
+
     # Algumas planilhas exibem uma URL no texto da celula, mas mantem um hyperlink
     # antigo/apagado apontando para outro dominio. A URL visivel deve vencer.
-    visible_url = _extract_url_from_text(cell.value)
-    if visible_url:
+    visible_url = _extract_url_from_text(raw_value)
+    if visible_url and not _is_bare_domain_url(visible_url):
         return visible_url
 
     if getattr(cell, "hyperlink", None) and cell.hyperlink.target:
-        return str(cell.hyperlink.target).strip()
+        target = str(cell.hyperlink.target).strip()
+        if target and not _is_bare_domain_url(target):
+            return target
 
+    cached_url = _extract_url_from_text(cached_value)
+    if cached_url and not _is_bare_domain_url(cached_url):
+        return cached_url
+
+    # URL "raiz" (sem caminho de produto) e tratada como ausente: evita mandar o
+    # coletor para a home do site e, principalmente, evita colidir produtos
+    # diferentes na deduplicacao (ver _build_runtime_row_key).
     return ""
 
 
@@ -334,7 +368,17 @@ def _append_precollected_rows(
 ) -> int:
     col_map = _map_output_columns(ws_src)
 
-    is_ml = source_name.strip().lower() == "mercado_livre"
+    source_key = source_name.strip().lower()
+    is_ml = source_key in {
+        "mercado_livre",
+        "mercado_livre_principal",
+        "mercado_livre_cotia",
+    }
+    ml_summary_channel = (
+        "Mercado Livre Cotia"
+        if source_key == "mercado_livre_cotia"
+        else "Mercado Livre Principal"
+    )
     if is_ml:
         # Mapeamento fixo da planilha Mercado Livre:
         # A: id no canal | B: codigo interno | C: canal | D: titulo | E: prazo | F: link
@@ -431,13 +475,18 @@ def _append_precollected_rows(
         ])
 
         if summary is not None:
+            summary_channel = (
+                ml_summary_channel
+                if is_ml
+                else _resolve_channel_column(canal_raw, link)
+            )
             _update_summary(
                 summary,
                 codigo_interno,
                 id_no_canal,
                 titulo,
                 str(canal_raw or "").strip() or (canal or None),
-                canal,
+                summary_channel,
                 _to_float(a_prazo),
             )
 
@@ -464,10 +513,10 @@ def _resolve_channel_column(channel_raw: object, link: str) -> Optional[str]:
         return "Madeiramadeira"
     if "zema" in channel:
         return "Zema"
+    if ("mercado livre" in channel or "mercadolivre" in channel) and "cotia" in channel:
+        return "Mercado Livre Cotia"
     if "mercado livre" in channel or "mercadolivre" in channel:
-        return "Mercado Livre"
-    if "carrefour" in channel:
-        return "Carrefour"
+        return "Mercado Livre Principal"
 
     if "probel.com.br" in link_l:
         return "Probel (oficial)"
@@ -484,9 +533,7 @@ def _resolve_channel_column(channel_raw: object, link: str) -> Optional[str]:
     if "zema.com" in link_l:
         return "Zema"
     if "mercadolivre.com.br" in link_l:
-        return "Mercado Livre"
-    if "carrefour" in link_l:
-        return "Carrefour"
+        return "Mercado Livre Principal"
 
     return None
 
@@ -661,7 +708,9 @@ def _resolve_output_prices(result: dict) -> tuple[object, object, object]:
     """
     normalized = _normalize_collector_prices(result)
     status_text = " ".join(str(normalized.get("status") or "").lower().split())
-    if status_text and any(token in status_text for token in ("bloqueado", "erro 403", "http 403", "forbidden")):
+    if status_text and any(
+        token in status_text for token in ("bloqueado", "bloqueio", "erro 403", "http 403", "forbidden")
+    ):
         # Exibe bloqueio na coluna "Preco" para ficar visivel na planilha.
         return "BLOQUEADO (403)", None, None
     raw_a_prazo = normalized.get("a_prazo")
@@ -843,20 +892,13 @@ def _append_summary_sheet(wb_out: Workbook, summary: dict[str, dict]) -> None:
                 item["codigo_interno"],
                 item["codigo_lojista"],
                 item["produto"],
-                probel_price,
                 loja_menor_preco,
                 seller_menor_preco,
                 menor_preco,
                 preco_medio,
                 quantidade_lojas,
-                channel_prices.get("Magazine Luiza"),
-                channel_prices.get("Casas Bahia"),
-                channel_prices.get("Web Continental"),
-                channel_prices.get("Casa e Video"),
-                channel_prices.get("Madeiramadeira"),
-                channel_prices.get("Zema"),
-                channel_prices.get("Mercado Livre"),
-                channel_prices.get("Carrefour"),
+                probel_price,
+                *(channel_prices.get(channel_name) for channel_name in SUMMARY_CHANNEL_COLUMNS),
             ]
         )
 
@@ -969,6 +1011,20 @@ def main():
 
     wb_in = load_workbook(input_path)
     ws_in = wb_in.active
+    # Twin com valores calculados (data_only=True): usado para resolver o link real
+    # quando a coluna de link e uma formula (ex.: CONCATENATE) em vez de texto/URL puro.
+    try:
+        ws_in_values = load_workbook(input_path, data_only=True).active
+    except Exception:
+        ws_in_values = None
+
+    def _cached_cell_value(row: int, column: int) -> object:
+        if ws_in_values is None:
+            return None
+        try:
+            return ws_in_values.cell(row=row, column=column).value
+        except Exception:
+            return None
 
     col_codigo_interno = find_col_flexible(ws_in, {
         "codigo interno",
@@ -1000,7 +1056,7 @@ def main():
 
     if col_link is None:
         for c in range(1, ws_in.max_column + 1):
-            if extract_url_from_cell(ws_in.cell(row=2, column=c)):
+            if extract_url_from_cell(ws_in.cell(row=2, column=c), cached_value=_cached_cell_value(2, c)):
                 col_link = c
                 break
 
@@ -1037,7 +1093,10 @@ def main():
         status = " ".join(str((result or {}).get("status") or "").lower().split())
         if not status:
             return False
-        return any(token in status for token in ("bloqueado", "erro 403", "http 403", "forbidden", "access denied"))
+        return any(
+            token in status
+            for token in ("bloqueado", "bloqueio", "challenge", "erro 403", "http 403", "forbidden", "access denied")
+        )
 
     def _env_int(name: str, default: int, minimum: int, maximum: int) -> int:
         raw = os.getenv(name)
@@ -1115,6 +1174,19 @@ def main():
         # Default propositalmente >0 para garantir progresso; ajuste via .env.
         magalu_item_timeout_seconds = _env_int("MAGALU_ITEM_TIMEOUT_SECONDS", 180, 0, 600)
 
+        # Mesma estrategia anti-bloqueio da Magalu (throttle + circuit breaker + retry), aplicada a Zema.
+        zema_blocked_items: list[dict] = []
+        zema_throttle_seconds = _env_int("ZEMA_THROTTLE_SECONDS", 0, 0, 60)
+        zema_throttle_min = _env_int("ZEMA_THROTTLE_MIN_SECONDS", 0, 0, 60)
+        zema_throttle_max = _env_int("ZEMA_THROTTLE_MAX_SECONDS", 0, 0, 60)
+        if zema_throttle_max < zema_throttle_min:
+            zema_throttle_max = zema_throttle_min
+        zema_blocked_streak_threshold = _env_int("ZEMA_BLOCKED_STREAK_THRESHOLD", 3, 1, 50)
+        zema_blocked_cooldown_seconds = _env_int("ZEMA_BLOCKED_COOLDOWN_SECONDS", 70, 5, 600)
+        zema_blocked_streak = 0
+        zema_circuit_open_until = 0.0
+        zema_retry_max_items = _env_int("ZEMA_RETRY_MAX_ITEMS", 60, 0, 5000)
+
         for row in range(2, ws_in.max_row + 1):
             if _check_abort():
                 print(
@@ -1131,7 +1203,10 @@ def main():
                 break
 
             titulo = ws_in.cell(row=row, column=col_titulo).value if col_titulo else None
-            link = extract_url_from_cell(ws_in.cell(row=row, column=col_link))
+            link = extract_url_from_cell(
+                ws_in.cell(row=row, column=col_link),
+                cached_value=_cached_cell_value(row, col_link),
+            )
             canal_raw = ws_in.cell(row=row, column=col_canal).value if col_canal else None
             canal = _resolve_output_channel(canal_raw, link)
             if not str(id_no_canal or "").strip():
@@ -1215,30 +1290,55 @@ def main():
                                     result = coletor(link, headless=headless)
                         elif coletor is coletar_casasbahia:
                             result = coletor(driver, link, sku=str(id_no_canal or "").strip())
+                        elif coletor is coletar_zema:
+                            # Circuit breaker: mesma estrategia da Magalu para reduzir bloqueio em sequencia.
+                            now = time.time()
+                            if now < zema_circuit_open_until:
+                                result = {"status": "ZEMA - BLOQUEADO (COOLDOWN)"}
+                            else:
+                                if zema_throttle_seconds:
+                                    if _sleep_with_abort(zema_throttle_seconds):
+                                        print(
+                                            f"Watchdog: encerrando fila e salvando parcial (motivo: {abort_reason})."
+                                        )
+                                        break
+                                elif zema_throttle_max:
+                                    jitter = random.randint(zema_throttle_min, zema_throttle_max)
+                                    if jitter:
+                                        if _sleep_with_abort(jitter):
+                                            print(
+                                                f"Watchdog: encerrando fila e salvando parcial (motivo: {abort_reason})."
+                                            )
+                                            break
+
+                                primary_browser = browser_pool[0] if browser_pool else "edge"
+                                if driver is None:
+                                    driver = _get_driver_for(primary_browser)
+                                result = coletor(driver, link)
+
+                                # Fallback: se Zema nao retornar dados validos, tenta em outro navegador.
+                                if not _status_ok(result):
+                                    if browser_pool[1:]:
+                                        print(
+                                            f"ZEMA fallback: status primario='{result.get('status')}' "
+                                            f"-> tentando navegadores {browser_pool[1:]}"
+                                        )
+                                    for alt_browser in browser_pool[1:]:
+                                        try:
+                                            alt_driver = _get_driver_for(alt_browser)
+                                            alt_result = coletor(alt_driver, link)
+                                            if isinstance(alt_result, dict) and _status_ok(alt_result):
+                                                print(f"ZEMA fallback: sucesso com {alt_browser}")
+                                                result = alt_result
+                                                break
+                                        except Exception:
+                                            print(f"ZEMA fallback: erro ao tentar {alt_browser}")
+                                            continue
                         else:
                             primary_browser = browser_pool[0] if browser_pool else "edge"
                             if driver is None:
                                 driver = _get_driver_for(primary_browser)
                             result = coletor(driver, link)
-
-                            # Fallback: se Zema nao retornar dados validos, tenta em outro navegador.
-                            if coletor is coletar_zema and not _status_ok(result):
-                                if browser_pool[1:]:
-                                    print(
-                                        f"ZEMA fallback: status primario='{result.get('status')}' "
-                                        f"-> tentando navegadores {browser_pool[1:]}"
-                                    )
-                                for alt_browser in browser_pool[1:]:
-                                    try:
-                                        alt_driver = _get_driver_for(alt_browser)
-                                        alt_result = coletor(alt_driver, link)
-                                        if isinstance(alt_result, dict) and _status_ok(alt_result):
-                                            print(f"ZEMA fallback: sucesso com {alt_browser}")
-                                            result = alt_result
-                                            break
-                                    except Exception:
-                                        print(f"ZEMA fallback: erro ao tentar {alt_browser}")
-                                        continue
 
                         if not isinstance(result, dict):
                             raise ValueError("Coletor nao retornou dict")
@@ -1298,6 +1398,28 @@ def main():
                     magalu_blocked_streak = 0
             elif coletor is coletar_magalu:
                 magalu_blocked_streak = 0
+
+            # Mesma logica de circuit breaker, aplicada a Zema (bloqueio/challenge apos fallback de navegadores).
+            if coletor is coletar_zema and _status_blocked(result):
+                zema_blocked_streak += 1
+                zema_blocked_items.append(
+                    {
+                        "out_row": ws_out.max_row,
+                        "link": link,
+                        "id_no_canal": id_no_canal,
+                        "codigo_interno": codigo_interno,
+                    }
+                )
+                if zema_blocked_streak >= zema_blocked_streak_threshold:
+                    print(
+                        "ZEMA bloqueado em sequencia "
+                        f"({zema_blocked_streak}/{zema_blocked_streak_threshold}). "
+                        f"Aguardando {zema_blocked_cooldown_seconds}s para reduzir bloqueio..."
+                    )
+                    zema_circuit_open_until = time.time() + float(zema_blocked_cooldown_seconds)
+                    zema_blocked_streak = 0
+            elif coletor is coletar_zema:
+                zema_blocked_streak = 0
 
             processed += 1
 
@@ -1374,8 +1496,76 @@ def main():
                     if not blocked_items:
                         break
 
-        seen_import_rows: set[tuple[str, str, str]] = set()
-        seen_import_ids: set[str] = set()
+        # Retry de itens bloqueados (Zema): mesma estrategia da Magalu.
+        if zema_blocked_items:
+            # Por padrao DESLIGADO (ZEMA_BLOCKED_RETRIES=0); habilite via env quando fizer sentido.
+            zema_wait_seconds = int(os.getenv("ZEMA_BLOCKED_WAIT_SECONDS") or "65")
+            zema_max_retries = int(os.getenv("ZEMA_BLOCKED_RETRIES") or "0")
+            zema_wait_seconds = 65 if zema_wait_seconds < 5 else zema_wait_seconds
+            zema_max_retries = 0 if zema_max_retries < 0 else zema_max_retries
+
+            if zema_max_retries <= 0:
+                print(
+                    "ZEMA retry: desativado (ZEMA_BLOCKED_RETRIES=0). "
+                    f"Ignorando {len(zema_blocked_items)} itens bloqueados."
+                )
+                zema_blocked_items = []
+
+            if zema_retry_max_items and len(zema_blocked_items) > zema_retry_max_items:
+                print(
+                    f"ZEMA retry: {len(zema_blocked_items)} itens bloqueados; "
+                    f"limitando a {zema_retry_max_items} para evitar demora excessiva."
+                )
+                zema_blocked_items = zema_blocked_items[:zema_retry_max_items]
+
+            if zema_blocked_items and zema_max_retries > 0 and not _check_abort():
+                for attempt in range(1, zema_max_retries + 1):
+                    print(f"ZEMA retry: aguardando {zema_wait_seconds}s (tentativa {attempt}/{zema_max_retries})...")
+                    if _sleep_with_abort(zema_wait_seconds):
+                        print(
+                            f"Watchdog: encerrando fila e salvando parcial (motivo: {abort_reason})."
+                        )
+                        break
+
+                    remaining_zema: list[dict] = []
+                    for item in zema_blocked_items:
+                        if _check_abort():
+                            print(
+                                f"Watchdog: encerrando fila e salvando parcial (motivo: {abort_reason})."
+                            )
+                            break
+
+                        try:
+                            retry_link = str(item["link"])
+                            retry_browser = browser_pool[0] if browser_pool else "edge"
+                            retry_driver = _get_driver_for(retry_browser)
+                            retry_result = coletar_zema(retry_driver, retry_link)
+                        except Exception as e:
+                            retry_result = {"status": f"ERRO NO COLETOR: {type(e).__name__} | {e}"}
+
+                        if isinstance(retry_result, dict) and _status_blocked(retry_result):
+                            remaining_zema.append(item)
+                            continue
+
+                        retry_price, _, _ = _resolve_output_prices(retry_result if isinstance(retry_result, dict) else {})
+                        if retry_price is not None and str(retry_price).strip():
+                            ws_out.cell(row=int(item["out_row"]), column=5).value = retry_price
+                        else:
+                            # Mantem marcador de bloqueio/indisponivel.
+                            ws_out.cell(row=int(item["out_row"]), column=5).value = "INDISPONIVEL"
+
+                        last_progress_at = time.time()
+
+                    if abort_reason:
+                        break
+                    zema_blocked_items = remaining_zema
+                    if not zema_blocked_items:
+                        break
+
+        seen_import_rows_principal: set[tuple[str, str, str]] = set()
+        seen_import_ids_principal: set[str] = set()
+        seen_import_rows_cotia: set[tuple[str, str, str]] = set()
+        seen_import_ids_cotia: set[str] = set()
 
         if input_ml_path is not None:
             wb_ml = load_workbook(input_ml_path)
@@ -1383,12 +1573,12 @@ def main():
             imported += _append_precollected_rows(
                 ws_ml,
                 ws_out,
-                source_name="mercado_livre",
+                source_name="mercado_livre_principal",
                 only_ids=only_ids,
                 max_rows=max_rows,
                 summary=summary,
-                seen_rows=seen_import_rows,
-                seen_ids=seen_import_ids,
+                seen_rows=seen_import_rows_principal,
+                seen_ids=seen_import_ids_principal,
             )
         if input_ml_cotia_path is not None:
             same_as_main = False
@@ -1409,12 +1599,12 @@ def main():
                 imported += _append_precollected_rows(
                     ws_ml_cotia,
                     ws_out,
-                    source_name="mercado_livre",
+                    source_name="mercado_livre_cotia",
                     only_ids=only_ids,
                     max_rows=max_rows,
                     summary=summary,
-                    seen_rows=seen_import_rows,
-                    seen_ids=seen_import_ids,
+                    seen_rows=seen_import_rows_cotia,
+                    seen_ids=seen_import_ids_cotia,
                 )
 
         _append_summary_sheet(wb_out, summary)

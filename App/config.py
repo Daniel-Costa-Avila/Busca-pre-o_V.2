@@ -32,23 +32,22 @@ SUMMARY_CHANNEL_COLUMNS = [
     "Magazine Luiza",
     "Casas Bahia",
     "Web Continental",
-    "Casa e Video",
     "Madeiramadeira",
     "Zema",
-    "Mercado Livre",
-    "Carrefour",
+    "Mercado Livre Principal",
+    "Mercado Livre Cotia",
 ]
 
 SUMMARY_HEADERS = [
     "CODIGO INTERNO",
     "CODIGO LOJISTA",
     "PRODUTO",
-    "Probel (oficial)",
     "LOJA MENOR PREÇO",
     "SELLER MENOR PREÇO",
     "MENOR PRECO",
     "PREÇO MÉDIO",
     "QUANTIDADE DE LOJAS",
+    "Probel (oficial)",
     *SUMMARY_CHANNEL_COLUMNS,
 ]
 

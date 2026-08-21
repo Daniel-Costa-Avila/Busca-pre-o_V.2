@@ -59,6 +59,10 @@ APP_AUTH_USER = os.getenv("APP_AUTH_USER", "").strip()
 APP_AUTH_PASSWORD = os.getenv("APP_AUTH_PASSWORD", "").strip()
 PASSWORD_AUTH_ENABLED = _parse_bool_env(os.getenv("PASSWORD_AUTH_ENABLED"), default=False)
 AUTH_ENABLED = PASSWORD_AUTH_ENABLED and bool(APP_AUTH_USER and APP_AUTH_PASSWORD)
+SHOW_SIDEBAR_USER_CARD = _parse_bool_env(
+    os.getenv("SHOW_SIDEBAR_USER_CARD"),
+    default=False,
+)
 
 EMBEDDED_HEIGHT = int(os.getenv("UI_EMBEDDED_HEIGHT", "1800"))
 ADMIN_SESSION_HEADER = "X-User-Session"
@@ -90,6 +94,84 @@ def _redirect_to_root_if_needed() -> None:
 
 
 _redirect_to_root_if_needed()
+
+
+def _install_dom_integrity_guard() -> None:
+    """Protege o DOM do Streamlit contra tradutores e extensoes do navegador.
+
+    Tradutores podem envolver ou mover nos de texto que ainda pertencem ao
+    reconciliador React. Quando a tela muda, o React tenta remover o no da
+    posicao original e o navegador dispara NotFoundError em removeChild.
+    """
+
+    components.html(
+        """
+        <script>
+        (() => {
+          try {
+            const hostWindow = window.parent;
+            const hostDocument = hostWindow.document;
+            const root = hostDocument.documentElement;
+
+            root.setAttribute("translate", "no");
+            root.classList.add("notranslate");
+            if (hostDocument.body) {
+              hostDocument.body.setAttribute("translate", "no");
+              hostDocument.body.classList.add("notranslate");
+            }
+
+            if (!hostDocument.head.querySelector('meta[name="google"][content="notranslate"]')) {
+              const meta = hostDocument.createElement("meta");
+              meta.name = "google";
+              meta.content = "notranslate";
+              hostDocument.head.appendChild(meta);
+            }
+
+            if (!hostWindow.__buscaPrecoDomIntegrityGuard) {
+              const nodePrototype = hostWindow.Node.prototype;
+              const nativeRemoveChild = nodePrototype.removeChild;
+              const nativeInsertBefore = nodePrototype.insertBefore;
+
+              Object.defineProperty(nodePrototype, "removeChild", {
+                configurable: true,
+                writable: true,
+                value(child) {
+                  if (child && child.parentNode !== this) {
+                    return child;
+                  }
+                  return nativeRemoveChild.call(this, child);
+                },
+              });
+
+              Object.defineProperty(nodePrototype, "insertBefore", {
+                configurable: true,
+                writable: true,
+                value(newNode, referenceNode) {
+                  if (referenceNode && referenceNode.parentNode !== this) {
+                    return nativeInsertBefore.call(this, newNode, null);
+                  }
+                  return nativeInsertBefore.call(this, newNode, referenceNode);
+                },
+              });
+
+              hostWindow.__buscaPrecoDomIntegrityGuard = true;
+            }
+
+            if (window.frameElement) {
+              window.frameElement.setAttribute("aria-hidden", "true");
+              window.frameElement.style.display = "none";
+            }
+          } catch (_) {
+            // A interface continua funcionando mesmo se o navegador bloquear
+            // o acesso do componente ao documento principal.
+          }
+        })();
+        </script>
+        """,
+        height=0,
+        width=0,
+    )
+
 
 def _should_embed_api_iframe() -> bool:
     raw = os.getenv("UI_EMBED_API_IFRAME")
@@ -1153,6 +1235,9 @@ def _render_shell_css() -> None:
         div[data-testid="stColumn"]:has(.pm-sidebar-brand) div[data-testid="stElementContainer"]:has(.pm-user-card) {
             margin-top: auto !important;
         }
+        div[data-testid="stColumn"]:has(.pm-sidebar-brand) div[data-testid="stElementContainer"]:has(.pm-version) {
+            margin-top: auto !important;
+        }
         .pm-sidebar-spacer { min-height: 0; }
         .pm-user-card {
             margin-top: auto;
@@ -2029,20 +2114,32 @@ def _render_native_panel() -> None:
         _nav_button("⚙  Configurações", "settings")
         _nav_button("?  Ajuda", "help")
 
-        current_user = _session_user()
-        username = str(current_user.get("username") or "").strip()
-        display_name = _esc(current_user.get("display_name") or ("Daniel Avila" if username.lower() == "admin" else username) or "Daniel Avila")
-        raw_role = str(current_user.get("role") or "").strip()
-        display_role = _esc("Administrador" if raw_role.lower() in {"admin", "administrator"} else raw_role or "Administrador")
+        if SHOW_SIDEBAR_USER_CARD:
+            current_user = _session_user()
+            username = str(current_user.get("username") or "").strip()
+            display_name = _esc(
+                current_user.get("display_name")
+                or ("Daniel Avila" if username.lower() == "admin" else username)
+                or "Daniel Avila"
+            )
+            raw_role = str(current_user.get("role") or "").strip()
+            display_role = _esc(
+                "Administrador"
+                if raw_role.lower() in {"admin", "administrator"}
+                else raw_role or "Administrador"
+            )
+            st.markdown(
+                f"""
+                <div class="pm-user-card">
+                  <div class="pm-user-avatar">●</div>
+                  <div><div class="pm-user-name">{display_name}</div><div class="pm-user-role">{display_role}</div></div>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+
         st.markdown(
-            f"""
-            <div class="pm-sidebar-spacer"></div>
-            <div class="pm-user-card">
-              <div class="pm-user-avatar">●</div>
-              <div><div class="pm-user-name">{display_name}</div><div class="pm-user-role">{display_role}</div></div>
-            </div>
-            <div class="pm-version">Versão 1.0.0</div>
-            """,
+            '<div class="pm-version">Versão 1.0.0</div>',
             unsafe_allow_html=True,
         )
 
@@ -2591,6 +2688,7 @@ def _render_native_panel() -> None:
             st.session_state["pm_view"] = "overview"
             st.rerun()
 
+_install_dom_integrity_guard()
 _require_login()
 _render_shell_css()
 
