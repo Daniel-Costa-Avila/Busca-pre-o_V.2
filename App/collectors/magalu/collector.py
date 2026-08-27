@@ -191,6 +191,9 @@ def _collect_visible_dom_texts(page) -> list[str]:
         '[data-testid="price-method"]',
         '[data-testid="price-installment"]',
         '[data-testid="price-value"]',
+        '[data-testid*="price"]',
+        '[class*="price"]',
+        '[itemprop="price"]',
     ):
         try:
             items = page.locator(selector).all_inner_texts()
@@ -233,8 +236,27 @@ def _extract_product_state_from_next_data(raw_html: str) -> dict | None:
     if isinstance(product, dict):
         return product
 
-    product = page_props.get("pdp", {}).get("product")
-    if isinstance(product, dict):
+    pdp = page_props.get("pdp")
+    if isinstance(pdp, dict) and isinstance(pdp.get("product"), dict):
+        return pdp["product"]
+
+    # O schema muda entre rotas e experimentos (pdp, data, initialState...).
+    # Procura o produto em subobjetos, mas exige algum campo de preco para não
+    # capturar produtos de recomendação.
+    def find_product(node: object, depth: int = 0) -> dict | None:
+        if depth > 8 or not isinstance(node, dict):
+            return None
+        for key, value in node.items():
+            if str(key).strip().lower() == "product" and isinstance(value, dict):
+                if any(k in value for k in ("bestPrice", "installment", "installments", "price")):
+                    return value
+            found = find_product(value, depth + 1)
+            if found:
+                return found
+        return None
+
+    product = find_product(page_props)
+    if product:
         return product
 
     return None

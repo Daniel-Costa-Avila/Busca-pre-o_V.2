@@ -1110,6 +1110,18 @@ def main():
             return default
         return value
 
+    def _env_float(name: str, default: float, minimum: float, maximum: float) -> float:
+        raw = os.getenv(name)
+        if raw is None:
+            return default
+        try:
+            value = float(str(raw).strip())
+        except ValueError:
+            return default
+        if value < minimum or value > maximum:
+            return default
+        return value
+
     def _get_driver_for(browser_name: str):
         if browser_name in drivers:
             return drivers[browser_name]
@@ -1159,14 +1171,23 @@ def main():
 
         blocked_items: list[dict] = []
         magalu_throttle_seconds = _env_int("MAGALU_THROTTLE_SECONDS", 0, 0, 60)
-        # Default: sem throttle para nao deixar a execucao lenta.
-        # Ajuste via env quando a Magalu estiver bloqueando (403/rate limit).
-        magalu_throttle_min = _env_int("MAGALU_THROTTLE_MIN_SECONDS", 0, 0, 60)
-        magalu_throttle_max = _env_int("MAGALU_THROTTLE_MAX_SECONDS", 0, 0, 60)
+        # Default conservador: jitter de 2-6s entre itens da Magalu para reduzir
+        # padrao de rajada (bot-like). Ajuste via env se precisar de mais/menos.
+        magalu_throttle_min = _env_int("MAGALU_THROTTLE_MIN_SECONDS", 2, 0, 60)
+        magalu_throttle_max = _env_int("MAGALU_THROTTLE_MAX_SECONDS", 6, 0, 60)
         if magalu_throttle_max < magalu_throttle_min:
             magalu_throttle_max = magalu_throttle_min
         magalu_blocked_streak_threshold = _env_int("MAGALU_BLOCKED_STREAK_THRESHOLD", 3, 1, 50)
         magalu_blocked_cooldown_seconds = _env_int("MAGALU_BLOCKED_COOLDOWN_SECONDS", 70, 5, 600)
+        # Backoff exponencial: a cada novo circuito aberto na mesma execucao, o cooldown
+        # cresce (x MULTIPLIER) ate o teto MAX_SECONDS, em vez de repetir sempre o mesmo tempo.
+        magalu_blocked_cooldown_multiplier = _env_float(
+            "MAGALU_BLOCKED_COOLDOWN_MULTIPLIER", 2.0, 1.0, 10.0
+        )
+        magalu_blocked_cooldown_max_seconds = _env_int(
+            "MAGALU_BLOCKED_COOLDOWN_MAX_SECONDS", 900, 5, 3600
+        )
+        magalu_current_cooldown_seconds = float(magalu_blocked_cooldown_seconds)
         magalu_blocked_streak = 0
         magalu_circuit_open_until = 0.0
         magalu_retry_max_items = _env_int("MAGALU_RETRY_MAX_ITEMS", 60, 0, 5000)
@@ -1392,10 +1413,15 @@ def main():
                     print(
                         "MAGALU bloqueado em sequencia "
                         f"({magalu_blocked_streak}/{magalu_blocked_streak_threshold}). "
-                        f"Aguardando {magalu_blocked_cooldown_seconds}s para reduzir bloqueio..."
+                        f"Aguardando {magalu_current_cooldown_seconds:.0f}s para reduzir bloqueio "
+                        "(backoff exponencial)..."
                     )
-                    magalu_circuit_open_until = time.time() + float(magalu_blocked_cooldown_seconds)
+                    magalu_circuit_open_until = time.time() + magalu_current_cooldown_seconds
                     magalu_blocked_streak = 0
+                    magalu_current_cooldown_seconds = min(
+                        magalu_current_cooldown_seconds * magalu_blocked_cooldown_multiplier,
+                        float(magalu_blocked_cooldown_max_seconds),
+                    )
             elif coletor is coletar_magalu:
                 magalu_blocked_streak = 0
 

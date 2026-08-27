@@ -18,8 +18,9 @@ def extrair_parcelamento(state: dict) -> Optional[str]:
 
     # 2️⃣ Lista de parcelamentos por método de pagamento
     installments = state.get("installments")
-    if isinstance(installments, list):
-        for inst in installments:
+    if isinstance(installments, (list, dict)):
+        candidates = installments if isinstance(installments, list) else [installments]
+        for inst in candidates:
             if not isinstance(inst, dict):
                 continue
 

@@ -9,12 +9,28 @@ def extrair_pix(state: dict) -> Optional[str]:
     o totalAmount é o preço Pix.
     """
 
-    bp = state.get("bestPrice")
-    if isinstance(bp, dict):
-        if bp.get("paymentMethodId") == "pix":
-            total = bp.get("totalAmount")
-            if _is_valid_price(total):
-                return _format_brl(total)
+    def walk(node: object) -> Optional[str]:
+        if isinstance(node, dict):
+            method = str(node.get("paymentMethodId") or node.get("paymentMethod") or "").strip().lower()
+            if method == "pix":
+                for key in ("totalAmount", "amount", "value", "price"):
+                    total = node.get(key)
+                    if _is_valid_price(total):
+                        return _format_brl(total)
+            for value in node.values():
+                found = walk(value)
+                if found:
+                    return found
+        elif isinstance(node, list):
+            for value in node:
+                found = walk(value)
+                if found:
+                    return found
+        return None
+
+    found = walk(state)
+    if found:
+        return found
 
     return None
 

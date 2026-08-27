@@ -5,18 +5,19 @@ import unicodedata
 from typing import Optional
 
 
-PRICE_RE = re.compile(r"R\$\s?\d{1,3}(?:\.\d{3})*(?:,\d{2})")
+_PRICE_NUMBER = r"(?:\d{1,3}(?:\.\d{3})+|\d+)(?:,\d{2})?"
+PRICE_RE = re.compile(rf"R\$\s?{_PRICE_NUMBER}")
 PIX_PATTERNS = (
-    re.compile(r"(R\$\s?\d{1,3}(?:\.\d{3})*(?:,\d{2}))\s*(?:no|via)\s*pix", re.IGNORECASE),
-    re.compile(r"pix\s*(?:de|por)?\s*(R\$\s?\d{1,3}(?:\.\d{3})*(?:,\d{2}))", re.IGNORECASE),
+    re.compile(rf"(R\$\s?{_PRICE_NUMBER})\s*(?:no|via)\s*pix", re.IGNORECASE),
+    re.compile(rf"pix\s*(?:de|por)?\s*(R\$\s?{_PRICE_NUMBER})", re.IGNORECASE),
 )
 AVISTA_PATTERNS = (
-    re.compile(r"a\s*vista\s*(?:de|por)?\s*(R\$\s?\d{1,3}(?:\.\d{3})*(?:,\d{2}))", re.IGNORECASE),
-    re.compile(r"(R\$\s?\d{1,3}(?:\.\d{3})*(?:,\d{2}))\s*a\s*vista", re.IGNORECASE),
-    re.compile(r"ou\s*(R\$\s?\d{1,3}(?:\.\d{3})*(?:,\d{2}))", re.IGNORECASE),
+    re.compile(rf"a\s*vista\s*(?:de|por)?\s*(R\$\s?{_PRICE_NUMBER})", re.IGNORECASE),
+    re.compile(rf"(R\$\s?{_PRICE_NUMBER})\s*a\s*vista", re.IGNORECASE),
+    re.compile(rf"ou\s*(R\$\s?{_PRICE_NUMBER})", re.IGNORECASE),
 )
 PARCELA_RE = re.compile(
-    r"(\d{1,2})\s*x\s*de\s*(R\$\s?\d{1,3}(?:\.\d{3})*(?:,\d{2})(?:\s*(?:sem|com)\s*juros)?)",
+    rf"(\d{{1,2}})\s*x\s*de\s*(R\$\s?{_PRICE_NUMBER}(?:\s*(?:sem|com)\s*juros)?)",
     re.IGNORECASE,
 )
 
