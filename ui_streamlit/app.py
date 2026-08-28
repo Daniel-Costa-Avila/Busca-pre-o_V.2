@@ -998,7 +998,7 @@ def _render_shell_css() -> None:
             box-shadow: none !important;
         }
         .stDownloadButton > button,
-        [data-testid="stDownloadButton"] > button {
+        [data-testid="stDownloadButton"] button {
             border-radius: 12px !important;
             border: 1px solid rgba(230, 57, 74, 0.4) !important;
             background: linear-gradient(135deg, #e6394a 0%, #c81f30 100%) !important;
@@ -1007,7 +1007,7 @@ def _render_shell_css() -> None:
             box-shadow: 0 10px 24px rgba(200, 31, 48, 0.3) !important;
         }
         .stDownloadButton > button:disabled,
-        [data-testid="stDownloadButton"] > button:disabled {
+        [data-testid="stDownloadButton"] button:disabled {
             background: rgba(120, 150, 220, 0.08) !important;
             border-color: var(--line-soft) !important;
             color: #64748b !important;
@@ -1015,24 +1015,24 @@ def _render_shell_css() -> None:
         }
 
         /* Correcao final da tela "Manual de Execucao" */
-        [data-testid="stButton"] > button {
+        [data-testid="stButton"] button {
             color: var(--ink) !important;
             background: rgba(120, 150, 220, 0.1) !important;
             border: 1px solid var(--line) !important;
         }
-        [data-testid="stButton"] > button[aria-label*="Executar com base cadastrada"] {
+        [data-testid="stButton"] button[aria-label*="Executar com base cadastrada"] {
             background: linear-gradient(135deg, #e6394a 0%, #c81f30 100%) !important;
             border-color: rgba(230, 57, 74, 0.4) !important;
             color: #ffffff !important;
         }
-        [data-testid="stButton"] > button[aria-label*="Executar com sua planilha"] {
+        [data-testid="stButton"] button[aria-label*="Executar com sua planilha"] {
             background: linear-gradient(135deg, #3b6dff 0%, #2447c9 100%) !important;
             border-color: rgba(59, 109, 255, 0.4) !important;
             color: #ffffff !important;
         }
-        [data-testid="stButton"] > button:disabled,
-        [data-testid="stButton"] > button[aria-label*="Executar com sua planilha"]:disabled,
-        [data-testid="stButton"] > button[aria-label*="Executar com base cadastrada"]:disabled {
+        [data-testid="stButton"] button:disabled,
+        [data-testid="stButton"] button[aria-label*="Executar com sua planilha"]:disabled,
+        [data-testid="stButton"] button[aria-label*="Executar com base cadastrada"]:disabled {
             background: rgba(120, 150, 220, 0.08) !important;
             border-color: var(--line-soft) !important;
             color: #64748b !important;
@@ -1041,12 +1041,12 @@ def _render_shell_css() -> None:
             box-shadow: none !important;
         }
 
-        [data-testid="stDownloadButton"] > button {
+        [data-testid="stDownloadButton"] button {
             background: linear-gradient(135deg, #34d399 0%, #16a34a 100%) !important;
             border-color: rgba(22, 163, 74, 0.4) !important;
             color: #ffffff !important;
         }
-        [data-testid="stDownloadButton"] > button:disabled {
+        [data-testid="stDownloadButton"] button:disabled {
             background: rgba(120, 150, 220, 0.08) !important;
             border-color: var(--line-soft) !important;
             color: #64748b !important;
@@ -1116,6 +1116,7 @@ def _render_shell_css() -> None:
             --bp-text: #f5f7fb;
             --bp-muted: #98a4bb;
             --bp-green: #11c968;
+            --bp-amber: #f5a524;
             --bp-red: #ef233c;
         }
         html, body, [data-testid="stAppViewContainer"] {
@@ -1272,7 +1273,7 @@ def _render_shell_css() -> None:
         }
         div[data-testid="stColumn"]:has(.pm-sidebar-brand) [data-testid="stButton"] button[aria-label*="Resumo"]::before { content: "⌂"; }
         div[data-testid="stColumn"]:has(.pm-sidebar-brand) [data-testid="stButton"] button[aria-label*="Execução Manual"]::before { content: "▷"; }
-        div[data-testid="stColumn"]:has(.pm-sidebar-brand) [data-testid="stButton"] button[aria-label="Status"]::before { content: "⌁"; }
+        div[data-testid="stColumn"]:has(.pm-sidebar-brand) [data-testid="stButton"] button[aria-label="Status"]::before { content: "◉"; }
         div[data-testid="stColumn"]:has(.pm-sidebar-brand) [data-testid="stButton"] button[aria-label*="Histórico"]::before { content: "◷"; }
         div[data-testid="stColumn"]:has(.pm-sidebar-brand) [data-testid="stButton"] button[aria-label*="Downloads"]::before { content: "⇩"; }
         div[data-testid="stColumn"]:has(.pm-sidebar-brand) [data-testid="stButton"] button[aria-label*="Configurações"]::before { content: "⚙"; }
@@ -1314,16 +1315,24 @@ def _render_shell_css() -> None:
             font-size: 1.55rem;
             color: #dce5f4;
         }
-        .pm-header-bell::after {
-            content: "";
+        /* O ponto so acende quando existe alerta de verdade (ver alert_count). */
+        .pm-header-bell.has-alert::after {
+            content: attr(data-count);
             position: absolute;
-            width: 7px;
-            height: 7px;
-            border-radius: 50%;
-            background: #1875ff;
-            top: 3px;
-            right: 12px;
-            box-shadow: 0 0 10px rgba(24,117,255,.7);
+            min-width: 17px;
+            height: 17px;
+            padding: 0 4px;
+            display: grid;
+            place-items: center;
+            border-radius: 999px;
+            background: var(--bp-amber);
+            color: #1a1200;
+            font-size: .62rem;
+            font-weight: 800;
+            line-height: 1;
+            top: 0;
+            right: 6px;
+            box-shadow: 0 0 10px rgba(245,165,36,.45);
         }
         .pm-header-line { display: flex; align-items: center; gap: 11px; min-height: 28px; }
         .pm-header-line b { color: #8eb3ff; font-weight: 500; font-size: 1.1rem; }
@@ -1352,6 +1361,10 @@ def _render_shell_css() -> None:
             font-weight: 900;
             box-shadow: 0 0 20px rgba(17,108,255,.35);
         }
+        .pm-context-icon.ok { background: var(--bp-green); color: #04240f; box-shadow: 0 0 20px rgba(17,201,104,.32); }
+        .pm-context-icon.warn { background: var(--bp-amber); color: #1a1200; box-shadow: 0 0 20px rgba(245,165,36,.32); }
+        .pm-context-icon.bad { background: var(--bp-red); color: #2a0308; box-shadow: 0 0 20px rgba(239,35,60,.32); }
+        .pm-context-name.big { font-size: 1.24rem; font-weight: 700; letter-spacing: -0.02em; }
         .pm-context-label { color: #1875ff; font-weight: 800; font-size: 1.05rem; letter-spacing: .02em; }
         .pm-context-name { margin-top: 21px; color: #fff; font-size: 1.04rem; font-weight: 650; }
         .pm-context-description { margin-top: 3px; color: var(--bp-muted); font-size: 0.86rem; }
@@ -1403,15 +1416,32 @@ def _render_shell_css() -> None:
         .pm-reference-row + .pm-reference-row { margin-top: 10px; }
         .pm-reference-row-main { min-width: 0; color: #fff; font-size: .82rem; }
         .pm-reference-row-main small { display: block; margin-top: 3px; color: #7f8ca4; font-size: .69rem; }
+        /* Selo de estado: a cor vem do valor, nao do CSS. Sem modificador fica neutro
+           de proposito, para que um selo esquecido nunca afirme "esta tudo bem". */
         .pm-reference-status {
             flex: 0 0 auto;
             padding: 6px 12px;
-            border: 1px solid rgba(17,201,104,.18);
+            border: 1px solid rgba(148,163,184,.22);
             border-radius: 999px;
-            background: rgba(17,201,104,.06);
-            color: var(--bp-green);
+            background: rgba(148,163,184,.08);
+            color: #b6c1d4;
             font-size: .72rem;
             font-weight: 700;
+        }
+        .pm-reference-status.ok {
+            border-color: rgba(17,201,104,.24);
+            background: rgba(17,201,104,.08);
+            color: var(--bp-green);
+        }
+        .pm-reference-status.warn {
+            border-color: rgba(245,165,36,.28);
+            background: rgba(245,165,36,.09);
+            color: var(--bp-amber);
+        }
+        .pm-reference-status.bad {
+            border-color: rgba(239,35,60,.30);
+            background: rgba(239,35,60,.09);
+            color: #ff6b7d;
         }
         .pm-reference-note { margin-top: 14px; color: #7f8ca4; font-size: .72rem; }
         .pm-reference-note.ok::before { content: "●"; color: var(--bp-green); margin-right: 8px; }
@@ -1433,19 +1463,201 @@ def _render_shell_css() -> None:
         .pm-metric-value { margin-top:3px; color:#fff; font-size:1.65rem; line-height:1.15; letter-spacing:-.035em; }
         .pm-metric-note { margin-top:7px; color:#8b97ad; font-size:.69rem; }
         .pm-metric-note.good { color:var(--bp-green); }
+        .pm-metric-note.warn { color:var(--bp-amber); }
+        .pm-metric-note.bad { color:#ff6b7d; }
+        .pm-metric-value.bad { color:#ff6b7d; }
+        .pm-metric-value small { margin-left:5px; color:#8b97ad; font-size:.62em; letter-spacing:0; }
         .pm-download-card { padding-bottom: 12px; }
         .pm-download-description { margin:5px 0 13px 38px; color:#8d99b0; font-size:.76rem; }
-        div[data-testid="stColumn"]:has(.pm-main-marker) [data-testid="stDownloadButton"] > button,
-        div[data-testid="stColumn"]:has(.pm-main-marker) [data-testid="stButton"] > button[aria-label*="Baixar última diária"] {
+        /* Azul so no download que e a acao principal da tela (type="primary").
+           O download da planilha modelo e apoio e herda o estilo discreto. */
+        div[data-testid="stColumn"]:has(.pm-main-marker) [data-testid="stDownloadButton"] button[kind="primary"],
+        div[data-testid="stColumn"]:has(.pm-main-marker) [data-testid="stButton"] button[aria-label*="Baixar última diária"] {
             min-height: 52px !important;
             border-radius: 8px !important;
-            background: linear-gradient(90deg, #e3132c, #d8182f) !important;
-            border: 1px solid #f0263d !important;
+            background: linear-gradient(180deg, #1472ff 0%, #0750db 100%) !important;
+            border: 1px solid #1c75ff !important;
             color: #fff !important;
             font-weight: 750 !important;
+            box-shadow: 0 8px 20px rgba(5,72,216,.27), inset 0 1px 0 rgba(255,255,255,.16) !important;
+        }
+        div[data-testid="stColumn"]:has(.pm-main-marker) [data-testid="stDownloadButton"] button:disabled,
+        div[data-testid="stColumn"]:has(.pm-main-marker) [data-testid="stButton"] button[aria-label*="Baixar última diária"]:disabled {
+            background: rgba(148,163,184,.10) !important;
+            border-color: rgba(148,163,184,.20) !important;
+            color: #7f8ca4 !important;
             box-shadow: none !important;
         }
+        /* Marcadores sao invisiveis, mas o container do Streamlit continuava
+           ocupando uma linha do flex (gap 13px) e empurrava o que vinha depois. */
+        div[data-testid="stElementContainer"]:has(.pm-main-marker),
+        div[data-testid="stElementContainer"]:has(.pm-sidebar-spacer) {
+            display: none !important;
+        }
+
+        /* Botoes da area principal. Sem isto o Streamlit desenha o botao padrao
+           (branco) no meio do painel escuro. */
+        div[data-testid="stColumn"]:has(.pm-main-marker) [data-testid="stButton"] button,
+        div[data-testid="stColumn"]:has(.pm-main-marker) [data-testid="stFormSubmitButton"] button {
+            min-height: 44px !important;
+            border-radius: 8px !important;
+            border: 1px solid var(--bp-border) !important;
+            background: rgba(5, 18, 39, .82) !important;
+            color: #dbe3f2 !important;
+            font-weight: 650 !important;
+            box-shadow: none !important;
+            transition: border-color .16s ease, background .16s ease, color .16s ease;
+        }
+        div[data-testid="stColumn"]:has(.pm-main-marker) [data-testid="stButton"] button:hover:not(:disabled) {
+            border-color: rgba(20, 114, 255, .45) !important;
+            background: rgba(18, 104, 255, .12) !important;
+            color: #ffffff !important;
+        }
+        div[data-testid="stColumn"]:has(.pm-main-marker) [data-testid="stButton"] button:disabled {
+            background: rgba(148, 163, 184, .08) !important;
+            border-color: rgba(148, 163, 184, .18) !important;
+            color: #6f7c93 !important;
+        }
+        div[data-testid="stColumn"]:has(.pm-main-marker) [data-testid="stButton"] button[kind="primary"] {
+            background: linear-gradient(180deg, #1472ff 0%, #0750db 100%) !important;
+            border-color: #1c75ff !important;
+            color: #ffffff !important;
+            font-weight: 750 !important;
+            box-shadow: 0 8px 20px rgba(5, 72, 216, .27), inset 0 1px 0 rgba(255, 255, 255, .16) !important;
+        }
+        /* Vermelho fica reservado para o que interrompe. Precisa da mesma
+           ancoragem da regra generica acima para vencer por especificidade. */
+        div[data-testid="stColumn"]:has(.pm-main-marker) .st-key-pm_status_stop [data-testid="stButton"] button {
+            background: rgba(239, 35, 60, .10) !important;
+            border-color: rgba(239, 35, 60, .45) !important;
+            color: #ff6b7d !important;
+            font-weight: 700 !important;
+        }
+        div[data-testid="stColumn"]:has(.pm-main-marker) .st-key-pm_status_stop [data-testid="stButton"] button:hover:not(:disabled) {
+            background: rgba(239, 35, 60, .18) !important;
+            border-color: rgba(239, 35, 60, .65) !important;
+            color: #ffe3e6 !important;
+        }
+
+        /* Rotulos de widget e titulos da area principal: o padrao do Streamlit
+           fica quase ilegivel sobre o fundo escuro, e o h3 do markdown saia
+           maior que o titulo da propria tela. */
+        div[data-testid="stColumn"]:has(.pm-main-marker) [data-testid="stWidgetLabel"] p,
+        div[data-testid="stColumn"]:has(.pm-main-marker) [data-testid="stWidgetLabel"] label {
+            color: #cfd8e8 !important;
+            font-size: .86rem !important;
+            font-weight: 600 !important;
+        }
+        div[data-testid="stColumn"]:has(.pm-main-marker) [data-testid="stCaptionContainer"] p {
+            color: #8d99b0 !important;
+        }
+        /* Radio e checkbox: o texto da opcao saia apagado e o marcador vinha no
+           vermelho padrao do tema, a mesma cor usada para erro. */
+        div[data-testid="stColumn"]:has(.pm-main-marker) [data-testid="stRadio"] label p,
+        div[data-testid="stColumn"]:has(.pm-main-marker) [data-testid="stCheckbox"] label p {
+            color: #e6ebf5 !important;
+            font-size: .88rem !important;
+        }
+        /* A cor do marcador vem do primaryColor do tema (.streamlit/config.toml),
+           nao de um seletor sobre a estrutura interna do BaseWeb. */
+
+        /* Download de apoio (type="secondary") nao concorre com a acao principal. */
+        div[data-testid="stColumn"]:has(.pm-main-marker) [data-testid="stDownloadButton"] button[kind="secondary"] {
+            min-height: 44px !important;
+            border-radius: 8px !important;
+            border: 1px solid var(--bp-border) !important;
+            background: rgba(5, 18, 39, .82) !important;
+            color: #dbe3f2 !important;
+            font-weight: 650 !important;
+            box-shadow: none !important;
+        }
+        div[data-testid="stColumn"]:has(.pm-main-marker) [data-testid="stDownloadButton"] button[kind="secondary"]:hover {
+            border-color: rgba(20, 114, 255, .45) !important;
+            background: rgba(18, 104, 255, .12) !important;
+            color: #ffffff !important;
+        }
+        div[data-testid="stColumn"]:has(.pm-main-marker) h1,
+        div[data-testid="stColumn"]:has(.pm-main-marker) h2,
+        div[data-testid="stColumn"]:has(.pm-main-marker) h3 {
+            color: #ffffff;
+            font-size: 1.02rem;
+            font-weight: 800;
+            letter-spacing: -.01em;
+            padding: 0;
+        }
+
+        /* Cabecalho de secao: um bloco fechado, no lugar do wrapper que o
+           Streamlit cortava ao meio. */
+        .pm-view-head {
+            padding: 16px 20px;
+            border: 1px solid var(--bp-border);
+            border-radius: 13px;
+            background: rgba(3, 13, 29, .95);
+        }
+        .pm-view-kicker {
+            color: #1875ff;
+            font-size: .72rem;
+            font-weight: 800;
+            letter-spacing: .12em;
+            text-transform: uppercase;
+        }
+        .pm-view-title {
+            margin-top: 6px;
+            color: #fff;
+            font-size: 1.22rem;
+            font-weight: 750;
+            letter-spacing: -.02em;
+        }
+        .pm-view-note { margin-top: 4px; color: var(--bp-muted); font-size: .84rem; }
+        .pm-job-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 9px;
+            padding: 7px 13px;
+            border: 1px solid var(--bp-border-soft);
+            border-radius: 999px;
+            background: rgba(5, 18, 39, .72);
+            color: var(--bp-muted);
+            font-size: .78rem;
+        }
+        .pm-job-chip code {
+            color: #cfe0ff;
+            background: rgba(20, 114, 255, .12);
+            border-radius: 5px;
+            padding: 2px 7px;
+            font-size: .76rem;
+        }
         .pm-dashboard-footer { padding: 0 0 3px; color:#748198; font-size:.69rem; text-align:center; }
+
+        /* Falha deixa de ser uma faixa vermelha com o texto cru do backend. */
+        .pm-error-card {
+            margin-top: 12px;
+            padding: 16px 18px;
+            border: 1px solid rgba(239,35,60,.34);
+            border-radius: 13px;
+            background: linear-gradient(105deg, rgba(40,8,16,.92), rgba(3,13,29,.95) 62%);
+        }
+        .pm-error-title { color:#fff; font-size:1rem; font-weight:700; }
+        .pm-error-message { margin-top:5px; color:#d8b6bb; font-size:.86rem; }
+        .pm-error-hint {
+            margin-top:12px;
+            padding:11px 13px;
+            border:1px solid rgba(239,35,60,.20);
+            border-radius:10px;
+            background:rgba(3,10,23,.6);
+            color:#e6ebf5;
+            font-size:.84rem;
+        }
+        .pm-error-hint b {
+            display:block;
+            margin-bottom:4px;
+            color:#7f8ca4;
+            font-size:.68rem;
+            font-weight:700;
+            letter-spacing:.08em;
+            text-transform:uppercase;
+        }
+        .pm-error-detail { margin-top:10px; color:#8b97ad; font-size:.74rem; font-family:"SF Mono","Cascadia Mono","Consolas",monospace; word-break:break-word; }
 
         @media (max-width: 1180px) {
             div[data-testid="stColumn"]:has(.pm-sidebar-brand) { flex-basis: 220px !important; min-width: 205px !important; }
@@ -1498,6 +1710,132 @@ def _render_shell_css() -> None:
             .pm-metric, .pm-metric:nth-child(4) { border-left:0; border-top:1px solid rgba(31,58,96,.34); padding:12px 8px; }
             .pm-metric:first-child { border-top:0; }
             .pm-download-description { margin-left:0; }
+        }
+
+        /* ============================================================
+           Responsividade
+           Os breakpoints acima cuidavam so do HTML proprio (pm-*). Os widgets
+           do Streamlit - colunas, botoes, uploader - continuavam com largura
+           de desktop e espremiam ou estouravam a linha. Esta camada vem depois
+           de proposito, para vencer as regras anteriores.
+           ============================================================ */
+
+        /* O Streamlit aplica margin-bottom: -1rem no stMarkdownContainer para
+           compensar a margem que um <p> de markdown carrega. Nosso HTML nao tem
+           essa margem, entao o -16px puxava o elemento seguinte para cima e ele
+           encostava no bloco anterior (cartao colado no botao). */
+        div[data-testid="stMarkdownContainer"]:has(> section),
+        div[data-testid="stMarkdownContainer"]:has(> [class^="pm-"]) {
+            margin-bottom: 0 !important;
+        }
+
+        /* A barra lateral e fixa em 255px, mas a coluna principal nascia com
+           flex-basis: calc(82% - 16px). Somados, passavam de 100% da linha em
+           qualquer tela abaixo de ~1500px: o flex quebrava, a barra ia para cima
+           e o conteudo despencava para baixo dela, deixando meia tela vazia.
+           Com basis 0 a coluna principal passa a ocupar exatamente o que sobra. */
+        @media (min-width: 851px) {
+            div[data-testid="stHorizontalBlock"]:has(.pm-sidebar-brand) {
+                flex-wrap: nowrap !important;
+            }
+            div[data-testid="stColumn"]:has(.pm-main-marker) {
+                flex: 1 1 0% !important;
+                min-width: 0 !important;
+            }
+        }
+
+        /* Nada deve poder empurrar a pagina na horizontal. */
+        [data-testid="stAppViewContainer"] { overflow-x: hidden; }
+        div[data-testid="stElementContainer"],
+        div[data-testid="stVerticalBlock"],
+        div[data-testid="stColumn"] { min-width: 0; }
+        .pm-view-title,
+        .pm-context-name,
+        .pm-reference-row-main,
+        .pm-metric-label,
+        .pm-metric-value,
+        .pm-error-message { overflow-wrap: anywhere; }
+
+        /* Linhas de acao: colunas de mesma altura e botoes ocupando a coluna. */
+        div[data-testid="stColumn"]:has(.pm-main-marker) div[data-testid="stHorizontalBlock"] {
+            align-items: flex-end;
+            gap: 10px;
+        }
+        div[data-testid="stColumn"]:has(.pm-main-marker) [data-testid="stButton"],
+        div[data-testid="stColumn"]:has(.pm-main-marker) [data-testid="stDownloadButton"] { width: 100%; }
+
+        /* Notebooks e telas medias. */
+        @media (max-width: 1180px) {
+            .pm-info-grid { grid-template-columns: 1fr !important; }
+            .pm-kpi-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .pm-context-name.big { font-size: 1.12rem; }
+        }
+
+        /* Tablets e janelas estreitas: as colunas do Streamlit passam a empilhar.
+           Sem isto elas so encolhem, e o texto do botao quebra no meio. */
+        @media (max-width: 850px) {
+            /* Empilhado, a coluna principal continuava presa em flex-basis 82%
+               e deixava uma faixa morta a direita. */
+            div[data-testid="stColumn"]:has(.pm-main-marker) {
+                flex: 1 1 auto !important;
+                width: 100% !important;
+                min-width: 100% !important;
+                max-width: none !important;
+            }
+            div[data-testid="stColumn"]:has(.pm-main-marker) div[data-testid="stHorizontalBlock"] {
+                flex-wrap: wrap !important;
+            }
+            div[data-testid="stColumn"]:has(.pm-main-marker) div[data-testid="stHorizontalBlock"] > div[data-testid="stColumn"] {
+                flex: 1 1 100% !important;
+                width: 100% !important;
+            }
+            /* O menu vira uma grade que se ajusta a largura disponivel, em vez
+               de duas colunas fixas empurrando o conteudo para baixo. */
+            div[data-testid="stColumn"]:has(.pm-sidebar-brand) div[data-testid="stVerticalBlock"]:has(.pm-sidebar-brand) {
+                grid-template-columns: repeat(auto-fit, minmax(158px, 1fr)) !important;
+            }
+            .pm-view-head { padding: 14px 16px; }
+            .pm-view-title { font-size: 1.1rem; }
+            .pm-dashboard-title { font-size: 1.24rem; }
+            .pm-context-name.big { font-size: 1.06rem; }
+        }
+
+        /* Celulares. */
+        @media (max-width: 540px) {
+            .pm-view-head { padding: 13px 14px; border-radius: 11px; }
+            .pm-view-kicker { font-size: .66rem; letter-spacing: .1em; }
+            .pm-view-title { font-size: 1.02rem; }
+            .pm-view-note { font-size: .8rem; }
+            .pm-job-chip { width: 100%; justify-content: space-between; }
+            .pm-context-name.big { font-size: 1rem; }
+            .pm-section-title { font-size: .84rem; }
+            .pm-error-card { padding: 14px; }
+            div[data-testid="stColumn"]:has(.pm-main-marker) [data-testid="stButton"] button,
+            div[data-testid="stColumn"]:has(.pm-main-marker) [data-testid="stDownloadButton"] button {
+                min-height: 46px;
+                font-size: .88rem;
+            }
+            div[data-testid="stColumn"]:has(.pm-sidebar-brand) div[data-testid="stVerticalBlock"]:has(.pm-sidebar-brand) {
+                grid-template-columns: repeat(auto-fit, minmax(118px, 1fr)) !important;
+            }
+        }
+
+        /* Celular deitado: sobra largura e falta altura. Encolhe o vertical e
+           devolve o menu para uma faixa unica. */
+        @media (max-height: 520px) and (orientation: landscape) {
+            .block-container { padding-top: .35rem !important; }
+            .pm-dashboard-header { min-height: auto; padding: 11px 16px; }
+            .pm-context-card { min-height: auto; padding: 13px 16px; }
+            .pm-context-art { display: none; }
+            .pm-context-name { margin-top: 10px; }
+            .pm-reference-card { min-height: auto; }
+            .pm-view-head { padding: 11px 14px; }
+            div[data-testid="stColumn"]:has(.pm-sidebar-brand) div[data-testid="stVerticalBlock"]:has(.pm-sidebar-brand) {
+                grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)) !important;
+            }
+            div[data-testid="stColumn"]:has(.pm-sidebar-brand) [data-testid="stButton"] button {
+                min-height: 38px !important;
+            }
         }
         </style>
         """,
@@ -2062,6 +2400,79 @@ def _render_native_panel() -> None:
         except (TypeError, ValueError):
             return 0.0
 
+    def _fmt_clock(value) -> str:
+        try:
+            stamp = float(value or 0)
+            if stamp <= 0:
+                return "-"
+            return datetime.fromtimestamp(stamp, tz=ZoneInfo("America/Sao_Paulo")).strftime("%H:%M")
+        except (TypeError, ValueError, OSError):
+            return "-"
+
+    def _fmt_duration(seconds: float) -> str:
+        total = int(seconds or 0)
+        if total <= 0:
+            return "-"
+        if total < 60:
+            return f"{total} s"
+        minutes, rest = divmod(total, 60)
+        return f"{minutes} min {rest:02d} s"
+
+    def _fmt_bytes(size: int) -> str:
+        value = float(size or 0)
+        if value <= 0:
+            return "-"
+        for unit in ("B", "KB", "MB", "GB"):
+            if value < 1024 or unit == "GB":
+                return f"{value:.0f} {unit}" if unit == "B" else f"{value:.1f} {unit}"
+            value /= 1024
+        return "-"
+
+    # Tom do selo a partir do valor. Antes o verde estava fixo no CSS e um job
+    # FAILED aparecia como se estivesse tudo certo.
+    def _status_tone(value) -> str:
+        normalized = str(value or "").strip().upper()
+        if normalized in {"DONE", "SUCCESS", "COMPLETED", "OK"}:
+            return "ok"
+        if normalized in {"FAILED", "ERROR"}:
+            return "bad"
+        if normalized in {"RUNNING", "QUEUED", "PENDING", "STOPPED", "CANCELED"}:
+            return "warn"
+        return ""
+
+    def _status_label(value) -> str:
+        normalized = str(value or "").strip().upper()
+        return {
+            "DONE": "Concluído",
+            "SUCCESS": "Concluído",
+            "COMPLETED": "Concluído",
+            "FAILED": "Falhou",
+            "ERROR": "Falhou",
+            "RUNNING": "Em execução",
+            "QUEUED": "Na fila",
+            "PENDING": "Pendente",
+            "STOPPED": "Interrompido",
+            "CANCELED": "Cancelado",
+        }.get(normalized, str(value or "-").strip() or "-")
+
+    def _section_head(kicker: str, title: str, note: str = "") -> None:
+        """Cabecalho de secao em um unico bloco fechado.
+
+        O padrao antigo abria '<div class="pm-glass pm-panel">' em uma chamada e
+        fechava em outra. O Streamlit sanitiza cada bloco de markdown
+        separadamente e fecha as tags soltas, entao o painel virava uma barra
+        vazia e o conteudo caia fora dele.
+        """
+        note_html = f'<div class="pm-view-note">{_esc(note)}</div>' if note else ""
+        st.markdown(
+            f'<section class="pm-view-head">'
+            f'<div class="pm-view-kicker">{_esc(kicker)}</div>'
+            f'<div class="pm-view-title">{_esc(title)}</div>'
+            f"{note_html}"
+            f"</section>",
+            unsafe_allow_html=True,
+        )
+
     ok, _, overview, message = _request_json("GET", "/api/overview", timeout=8)
     if not ok:
         st.error(message or "Falha ao carregar overview da API.")
@@ -2108,7 +2519,7 @@ def _render_native_panel() -> None:
 
         _nav_button("⌂  Resumo", "overview")
         _nav_button("▷  Execução Manual", "run")
-        _nav_button("⌁  Status", "status")
+        _nav_button("◉  Status", "status")
         _nav_button("◷  Histórico de Jobs", "history")
         _nav_button("⇩  Downloads", "downloads")
         _nav_button("⚙  Configurações", "settings")
@@ -2172,6 +2583,18 @@ def _render_native_panel() -> None:
         except (TypeError, ValueError, OSError):
             pass
 
+        # O sino so acende quando existe algo para o operador resolver. Um ponto
+        # permanentemente aceso deixa de ser lido depois do segundo dia.
+        alerts: list[str] = []
+        if failed:
+            alerts.append(f"{failed} execução(ões) com falha")
+        if not bool(overview.get("has_default_input")):
+            alerts.append("base de entrada ausente no servidor")
+        if not bool(API_TOKEN):
+            alerts.append("token de API não configurado")
+        bell_class = "pm-header-bell has-alert" if alerts else "pm-header-bell"
+        bell_title = _esc("; ".join(alerts)) if alerts else "Nenhum alerta"
+
         st.markdown(
             f"""
             <div class="pm-dashboard-header">
@@ -2180,7 +2603,7 @@ def _render_native_panel() -> None:
                 <div class="pm-dashboard-subtitle">{_esc(path_subtitle)}</div>
               </div>
               <div class="pm-header-meta">
-                <div class="pm-header-bell">♧</div>
+                <div class="{bell_class}" data-count="{len(alerts)}" title="{bell_title}">♧</div>
                 <div class="pm-header-line"><b>□</b><span>{date_label}</span></div>
                 <div class="pm-header-line"><b>◷</b><span>{now_br.strftime('%H:%M:%S')}</span></div>
               </div>
@@ -2207,17 +2630,77 @@ def _render_native_panel() -> None:
                 if duration > 0
             ]
             avg_seconds = int(sum(durations) / len(durations)) if durations else 0
-            avg_duration = f"{avg_seconds // 60:02d}:{avg_seconds % 60:02d}"
+            # Sem execucao concluida nao ha media: "00:00" dava a entender que a
+            # coleta leva zero segundo.
+            avg_duration = f"{avg_seconds // 60:02d}:{avg_seconds % 60:02d}" if avg_seconds else "-"
+            avg_duration_note = "Por execução recente" if avg_seconds else "Nenhuma execução concluída ainda"
+
+            # O arquivo do dia e preparado antes de desenhar o cartao para que o
+            # carimbo (nome, horario e tamanho) apareca junto do botao de baixar.
+            can_download_daily_job = latest_daily_id != "-"
+            ok_dl, content, error = _prepare_download_by_path("/download/daily/fixed")
+            filename = _daily_result_filename()
+            if (not ok_dl or not content) and can_download_daily_job:
+                ok_dl, content, error = _prepare_download_for_job(latest_daily_id)
+                filename = _daily_result_filename()
+            daily_file_ready = bool(ok_dl and content)
+            daily_size_label = _fmt_bytes(len(content)) if daily_file_ready else "-"
+
+            daily_status = str(latest_daily.get("status") or "").strip().upper()
+            manual_status = str(latest_manual.get("status") or "").strip().upper()
+            daily_tone = _status_tone(daily_status)
+            daily_duration = _fmt_duration(_job_duration_seconds(latest_daily))
+            manual_duration = _fmt_duration(_job_duration_seconds(latest_manual))
+            daily_finished = _fmt_clock(latest_daily.get("finished_at"))
+            daily_started = _fmt_clock(latest_daily.get("started_at") or latest_daily.get("created_at"))
+
+            # O cartao de contexto repetia "Painel / Resumo", que ja esta no cabecalho
+            # logo acima. Passa a carregar o resultado da coleta do dia.
+            if not latest_daily:
+                context_icon, context_tone = "i", ""
+                context_headline = "Nenhuma coleta diária registrada ainda"
+            elif daily_tone == "ok":
+                context_icon, context_tone = "✓", "ok"
+                context_headline = f"Concluída às {daily_finished}"
+                if daily_duration != "-":
+                    context_headline = f"{context_headline} · {daily_duration}"
+            elif daily_tone == "bad":
+                context_icon, context_tone = "!", "bad"
+                context_headline = f"Falhou às {daily_finished}"
+            elif daily_tone == "warn":
+                context_icon, context_tone = "◷", "warn"
+                context_headline = f"{_status_label(daily_status)} desde {daily_started}"
+            else:
+                context_icon, context_tone = "i", ""
+                context_headline = _status_label(daily_status)
+
+            context_parts = []
+            if daily_file_ready:
+                context_parts.append(f"{filename} · {daily_size_label}")
+            if next_run_note:
+                context_parts.append(f"Próxima rotina: {next_run_note}")
+            context_description = " · ".join(context_parts) or "Resumo geral das informações e status do sistema."
+
+            if daily_file_ready:
+                # O horario so entra quando a diaria ja terminou; com o job ainda em
+                # execucao o campo vinha vazio e saia como "gerado as -".
+                download_parts = [filename]
+                if daily_finished != "-":
+                    download_parts.append(f"gerado às {daily_finished}")
+                download_parts.append(daily_size_label)
+                download_description = " · ".join(download_parts)
+            else:
+                download_description = "Nenhuma planilha diária disponível ainda."
 
             st.markdown(
                 f"""
                 <section class="pm-context-card">
                   <div class="pm-context-copy">
-                    <div class="pm-context-icon">i</div>
+                    <div class="pm-context-icon {context_tone}">{context_icon}</div>
                     <div>
-                      <div class="pm-context-label">CONTEXTO</div>
-                      <div class="pm-context-name">Painel / Resumo</div>
-                      <div class="pm-context-description">Resumo geral das informações e status do sistema.</div>
+                      <div class="pm-context-label">COLETA DE HOJE</div>
+                      <div class="pm-context-name big">{_esc(context_headline)}</div>
+                      <div class="pm-context-description">{_esc(context_description)}</div>
                     </div>
                   </div>
                   <svg class="pm-context-art" viewBox="0 0 620 170" aria-hidden="true">
@@ -2234,55 +2717,17 @@ def _render_native_panel() -> None:
                   </svg>
                 </section>
 
-                <section class="pm-reference-grid">
-                  <article class="pm-reference-card">
-                    <div class="pm-reference-heading"><div class="pm-reference-icon">□</div><div><div class="pm-reference-title">Arquivos</div><div class="pm-reference-subtitle">Arquivo utilizado para a importação<br/>e processamento dos dados.</div></div></div>
-                    <div class="pm-reference-row"><div class="pm-reference-row-main">▣ &nbsp; input.xlsx padrão</div><span class="pm-reference-status">{'Disponível' if has_default_input else 'Ausente'}</span></div>
-                    <div class="pm-reference-note">Última verificação: {_esc(latest_check)}</div>
-                  </article>
-
-                  <article class="pm-reference-card">
-                    <div class="pm-reference-heading"><div class="pm-reference-icon">◷</div><div><div class="pm-reference-title">Últimos Jobs</div><div class="pm-reference-subtitle">Últimas execuções realizadas pelo sistema.</div></div></div>
-                    <div class="pm-reference-row"><div class="pm-reference-row-main">Manual<small>{_esc(latest_manual_time)}</small></div><div class="pm-reference-row-main">{_esc(latest_manual_id)} &nbsp; <span style="color:#11c968">✓</span></div></div>
-                    <div class="pm-reference-row"><div class="pm-reference-row-main">Diário<small>{_esc(latest_daily_time)}</small></div><div class="pm-reference-row-main">{_esc(latest_daily_id)} &nbsp; <span style="color:#11c968">✓</span></div></div>
-                    <div class="pm-reference-link">Ver histórico completo &nbsp; →</div>
-                  </article>
-
-                  <article class="pm-reference-card">
-                    <div class="pm-reference-heading"><div class="pm-reference-icon">⌁</div><div><div class="pm-reference-title">Conexão</div><div class="pm-reference-subtitle">Status da conexão com API e tokens.</div></div></div>
-                    <div class="pm-reference-row"><div class="pm-reference-row-main">API</div><span class="pm-reference-status">Ativo</span></div>
-                    <div class="pm-reference-row"><div class="pm-reference-row-main">Token</div><span class="pm-reference-status">{'OK' if bool(API_TOKEN) else 'Ausente'}</span></div>
-                    <div class="pm-reference-note ok">Conexão verificada: {_esc(now_br.strftime('%d/%m/%Y %H:%M'))}</div>
-                  </article>
-                </section>
-
-                <section class="pm-system-overview">
-                  <div class="pm-section-title"><span>⌁</span> Visão geral do sistema</div>
-                  <div class="pm-metric-grid">
-                    <div class="pm-metric"><div class="pm-metric-label">Arquivos processados</div><div class="pm-metric-value">{done}</div><div class="pm-metric-note good">Concluídos com sucesso</div></div>
-                    <div class="pm-metric"><div class="pm-metric-label">Execuções realizadas</div><div class="pm-metric-value">{total_jobs}</div><div class="pm-metric-note">{running} em execução · {queued} em fila</div></div>
-                    <div class="pm-metric"><div class="pm-metric-label">Tempo médio</div><div class="pm-metric-value">{avg_duration}</div><div class="pm-metric-note">Por execução recente</div></div>
-                    <div class="pm-metric"><div class="pm-metric-label">Taxa de sucesso</div><div class="pm-metric-value">{success_rate:.1f}%</div><div class="pm-metric-note good">{failed} falha(s) registrada(s)</div></div>
-                    <div class="pm-metric"><div class="pm-metric-label">Próxima execução</div><div class="pm-metric-value">Diária</div><div class="pm-metric-note">{_esc(next_run_note)}</div></div>
-                  </div>
-                </section>
-
                 <section class="pm-download-card">
                   <div class="pm-section-title"><span>⇩</span> Downloads</div>
-                  <div class="pm-download-description">Disponibilize a última planilha diária já processada para testes e validações.</div>
+                  <div class="pm-download-description">{_esc(download_description)}</div>
                 </section>
                 """,
                 unsafe_allow_html=True,
             )
 
-            can_download_daily_job = latest_daily_id != "-"
-            ok_dl, content, error = _prepare_download_by_path("/download/daily/fixed")
-            filename = _daily_result_filename()
-            if (not ok_dl or not content) and can_download_daily_job:
-                ok_dl, content, error = _prepare_download_for_job(latest_daily_id)
-                filename = _daily_result_filename()
-
-            if ok_dl and content:
+            # O download da diaria e a acao mais usada do dia: fica logo abaixo do
+            # resultado, e nao no rodape da pagina.
+            if daily_file_ready:
                 st.download_button(
                     "⇩  Baixar última diária (.xlsx)",
                     data=content,
@@ -2300,6 +2745,45 @@ def _render_native_panel() -> None:
                 )
                 if error:
                     st.caption("Arquivo diário indisponível no momento.")
+
+            st.markdown(
+                f"""
+                <section class="pm-reference-grid">
+                  <article class="pm-reference-card">
+                    <div class="pm-reference-heading"><div class="pm-reference-icon">□</div><div><div class="pm-reference-title">Arquivos</div><div class="pm-reference-subtitle">Arquivo utilizado para a importação<br/>e processamento dos dados.</div></div></div>
+                    <div class="pm-reference-row"><div class="pm-reference-row-main">Base de entrada<small>input.xlsx padrão</small></div><span class="pm-reference-status {'ok' if has_default_input else 'bad'}">{'Disponível' if has_default_input else 'Ausente'}</span></div>
+                    <div class="pm-reference-row"><div class="pm-reference-row-main">Última planilha gerada<small>{_esc(daily_size_label)}</small></div><span class="pm-reference-status {'ok' if daily_file_ready else 'warn'}">{'Disponível' if daily_file_ready else 'Indisponível'}</span></div>
+                    <div class="pm-reference-note">Última verificação: {_esc(latest_check)}</div>
+                  </article>
+
+                  <article class="pm-reference-card">
+                    <div class="pm-reference-heading"><div class="pm-reference-icon">◷</div><div><div class="pm-reference-title">Últimos Jobs</div><div class="pm-reference-subtitle">Últimas execuções realizadas pelo sistema.</div></div></div>
+                    <div class="pm-reference-row" title="{_esc(latest_daily_id)}"><div class="pm-reference-row-main">Diário<small>{_esc(latest_daily_time)} · {_esc(daily_duration)}</small></div><span class="pm-reference-status {_status_tone(daily_status)}">{_esc(_status_label(daily_status))}</span></div>
+                    <div class="pm-reference-row" title="{_esc(latest_manual_id)}"><div class="pm-reference-row-main">Manual<small>{_esc(latest_manual_time)} · {_esc(manual_duration)}</small></div><span class="pm-reference-status {_status_tone(manual_status)}">{_esc(_status_label(manual_status))}</span></div>
+                    <div class="pm-reference-link">Ver histórico completo &nbsp; →</div>
+                  </article>
+
+                  <article class="pm-reference-card">
+                    <div class="pm-reference-heading"><div class="pm-reference-icon">◉</div><div><div class="pm-reference-title">Conexão</div><div class="pm-reference-subtitle">Status da conexão com API e tokens.</div></div></div>
+                    <div class="pm-reference-row"><div class="pm-reference-row-main">API<small>respondeu à consulta do painel</small></div><span class="pm-reference-status ok">Ativa</span></div>
+                    <div class="pm-reference-row"><div class="pm-reference-row-main">Token<small>{'configurado no servidor' if bool(API_TOKEN) else 'as chamadas seguem sem autenticação'}</small></div><span class="pm-reference-status {'ok' if bool(API_TOKEN) else 'bad'}">{'OK' if bool(API_TOKEN) else 'Ausente'}</span></div>
+                    <div class="pm-reference-note ok">Conexão verificada: {_esc(now_br.strftime('%d/%m/%Y %H:%M'))}</div>
+                  </article>
+                </section>
+
+                <section class="pm-system-overview">
+                  <div class="pm-section-title"><span>◉</span> Visão geral do sistema</div>
+                  <div class="pm-metric-grid">
+                    <div class="pm-metric"><div class="pm-metric-label">Coletas concluídas</div><div class="pm-metric-value">{done}<small>de {total_jobs}</small></div><div class="pm-metric-note">{running} em execução · {queued} em fila</div></div>
+                    <div class="pm-metric"><div class="pm-metric-label">Execuções com falha</div><div class="pm-metric-value{' bad' if failed else ''}">{failed}</div><div class="pm-metric-note{' bad' if failed else ' good'}">{'Verifique o Histórico de Jobs' if failed else 'Nenhuma falha registrada'}</div></div>
+                    <div class="pm-metric"><div class="pm-metric-label">Tempo médio</div><div class="pm-metric-value">{avg_duration}</div><div class="pm-metric-note">{avg_duration_note}</div></div>
+                    <div class="pm-metric"><div class="pm-metric-label">Taxa de sucesso</div><div class="pm-metric-value">{success_rate:.1f}%</div><div class="pm-metric-note{' good' if not failed else ' bad'}">{failed} falha(s) em {finished_jobs} execução(ões)</div></div>
+                    <div class="pm-metric"><div class="pm-metric-label">Próxima execução</div><div class="pm-metric-value">Diária</div><div class="pm-metric-note">{_esc(next_run_note)}</div></div>
+                  </div>
+                </section>
+                """,
+                unsafe_allow_html=True,
+            )
 
             st.markdown('<div class="pm-dashboard-footer">Busca Preço © 2026 · Todos os direitos reservados.</div>', unsafe_allow_html=True)
 
@@ -2387,24 +2871,23 @@ def _render_native_panel() -> None:
                 if error:
                     st.caption("Arquivo diário indisponível no momento.")
 
-            st.markdown("</div>", unsafe_allow_html=True)
-
         elif view == "run":
-            st.markdown('<div class="pm-glass pm-panel">', unsafe_allow_html=True)
-            st.markdown('<p class="pm-kicker">Execução Manual</p>', unsafe_allow_html=True)
-            st.subheader("Novo processamento")
-            st.caption("Envie uma planilha ou use a base padrao do servidor.")
+            _section_head(
+                "Execução Manual",
+                "Novo processamento",
+                "Envie uma planilha ou use a base padrão do servidor.",
+            )
 
             st.markdown(
                 """
-                <div style="border:1px solid #e4e7ec;border-radius:12px;background:#ffffff;padding:14px 16px;margin:6px 0 12px 0;">
-                  <p style="margin:0 0 8px 0;font-weight:700;color:#101828;">Manual rápido (como executar e baixar resultados)</p>
-                  <p style="margin:0;color:#344054;line-height:1.55;">
-                    1. Baixe a planilha modelo e preencha os produtos.<br/>
-                    2. Faça upload da planilha.<br/>
-                    3. Clique em <strong>Executar com sua planilha</strong>.<br/>
-                    4. Acompanhe em <strong>Status</strong>.<br/>
-                    5. Ao concluir, clique em <strong>Baixar resultado</strong>.
+                <div style="border:1px solid var(--bp-border);border-radius:12px;background:rgba(5,18,39,.72);padding:14px 16px;margin:6px 0 12px 0;">
+                  <p style="margin:0 0 8px 0;font-weight:700;color:#ffffff;">Manual rápido (como executar e baixar resultados)</p>
+                  <p style="margin:0;color:#cfd8e8;line-height:1.55;">
+                    1. Escolha a base: a cadastrada no servidor ou uma planilha sua.<br/>
+                    2. Para usar a sua, baixe a planilha modelo, preencha e faça o upload.<br/>
+                    3. Clique em <strong style="color:#ffffff;">Iniciar coleta</strong>.<br/>
+                    4. Acompanhe em <strong style="color:#ffffff;">Status</strong>.<br/>
+                    5. Ao concluir, clique em <strong style="color:#ffffff;">Baixar resultado</strong>.
                   </p>
                 </div>
                 """,
@@ -2429,35 +2912,42 @@ def _render_native_panel() -> None:
             st.markdown('<div style="height: 12px"></div>', unsafe_allow_html=True)
 
             has_default_input = bool(overview.get("has_default_input"))
-            use_default = st.checkbox(
-                "Usar base padrão do servidor quando nenhum arquivo for enviado",
-                value=has_default_input,
-            )
-            uploaded = st.file_uploader("Planilha (.xlsx)", type=["xlsx"])
             output_mode = "completa"
 
-            run_col1, run_col2 = st.columns([1, 1])
-            with run_col1:
-                run_default = st.button(
-                    "Executar com base cadastrada (padrão)",
-                    type="primary",
-                    use_container_width=True,
-                    disabled=not use_default,
-                    help="Inicia a coleta usando os produtos já cadastrados no servidor (base padrão).",
-                )
-                st.caption("Usa a base padrão já carregada. Ideal para rodar o processo completo rapidamente.")
-            with run_col2:
-                run_upload = st.button(
-                    "Executar com sua planilha (personalizado)",
-                    use_container_width=True,
-                    disabled=uploaded is None,
-                    help="Executa uma pesquisa personalizada usando a planilha que você enviou.",
-                )
-                st.caption("Permite testar novos produtos e critérios. Recomendado para validações e ajustes.")
+            # Antes eram dois botoes "Executar" com o mesmo peso, cada um habilitado
+            # por um controle diferente. A escolha da base virou um seletor, e sobrou
+            # um unico botao para iniciar.
+            BASE_PADRAO = "Base cadastrada no servidor"
+            BASE_UPLOAD = "Enviar a minha planilha"
+            source = st.radio(
+                "De onde vem a lista de produtos",
+                options=[BASE_PADRAO, BASE_UPLOAD],
+                index=0 if has_default_input else 1,
+                horizontal=True,
+            )
 
-            if run_default or run_upload:
+            uploaded = None
+            if source == BASE_PADRAO:
+                if has_default_input:
+                    st.caption("Usa os produtos já cadastrados no servidor (input.xlsx padrão).")
+                else:
+                    st.warning("A base padrão não está disponível no servidor. Envie uma planilha para continuar.")
+            else:
+                uploaded = st.file_uploader("Planilha (.xlsx)", type=["xlsx"])
+                st.caption("Use a planilha modelo acima — ela já vem com as colunas certas.")
+
+            blocked = not has_default_input if source == BASE_PADRAO else uploaded is None
+            start_run = st.button(
+                "Iniciar coleta",
+                type="primary",
+                use_container_width=True,
+                disabled=blocked,
+                help="Você vai para a tela de Status assim que a coleta começar.",
+            )
+
+            if start_run:
                 files = None
-                if run_upload and uploaded is not None:
+                if source == BASE_UPLOAD and uploaded is not None:
                     files = {
                         "file": (
                             uploaded.name or "input.xlsx",
@@ -2484,8 +2974,6 @@ def _render_native_panel() -> None:
                     else:
                         st.success("Job iniciado.")
 
-            st.markdown("</div>", unsafe_allow_html=True)
-
         elif view == "history":
             latest_manual = overview.get("latest_manual_job") if isinstance(overview.get("latest_manual_job"), dict) else {}
             latest_daily = overview.get("latest_daily_job") if isinstance(overview.get("latest_daily_job"), dict) else {}
@@ -2497,7 +2985,8 @@ def _render_native_panel() -> None:
                     f'<div class="pm-reference-row"><div class="pm-reference-row-main">{label}'
                     f'<small>{_esc(_fmt_timestamp(job.get("created_at")))}</small></div>'
                     f'<div class="pm-reference-row-main">{_esc(job.get("job_id") or "-")} &nbsp; '
-                    f'<span class="pm-reference-status">{_esc(job.get("status") or "-")}</span></div></div>'
+                    f'<span class="pm-reference-status {_status_tone(job.get("status"))}">'
+                    f'{_esc(_status_label(job.get("status")))}</span></div></div>'
                 )
             st.markdown(
                 '<section class="pm-reference-card" style="min-height:260px">'
@@ -2539,8 +3028,8 @@ def _render_native_panel() -> None:
                 '<div class="pm-reference-heading"><div class="pm-reference-icon">⚙</div>'
                 '<div><div class="pm-reference-title">Configurações</div>'
                 '<div class="pm-reference-subtitle">A API, o token e a programação automática são administrados pelo servidor.</div></div></div>'
-                f'<div class="pm-reference-row"><div class="pm-reference-row-main">API</div><span class="pm-reference-status">Ativa</span></div>'
-                f'<div class="pm-reference-row"><div class="pm-reference-row-main">Token</div><span class="pm-reference-status">{"Configurado" if API_TOKEN else "Ausente"}</span></div>'
+                f'<div class="pm-reference-row"><div class="pm-reference-row-main">API</div><span class="pm-reference-status ok">Ativa</span></div>'
+                f'<div class="pm-reference-row"><div class="pm-reference-row-main">Token</div><span class="pm-reference-status {"ok" if API_TOKEN else "bad"}">{"Configurado" if API_TOKEN else "Ausente"}</span></div>'
                 '</section>',
                 unsafe_allow_html=True,
             )
@@ -2558,9 +3047,11 @@ def _render_native_panel() -> None:
             )
 
         elif view == "status":
-            st.markdown('<div class="pm-glass pm-panel">', unsafe_allow_html=True)
-            st.markdown('<p class="pm-kicker">Status em tempo real</p>', unsafe_allow_html=True)
-            st.subheader("Acompanhamento do job")
+            _section_head(
+                "Status em tempo real",
+                "Acompanhamento do job",
+                "Estado, entregas e resultado da execução mais recente.",
+            )
 
             job_id = str(st.session_state.get("last_job_id") or "").strip()
             if not job_id:
@@ -2568,18 +3059,34 @@ def _render_native_panel() -> None:
                 job_id = str(latest_manual.get("job_id") or "").strip()
 
             if not job_id:
-                st.info("Nenhum job encontrado ainda.")
-                st.markdown("</div>", unsafe_allow_html=True)
-                st.markdown("</div>", unsafe_allow_html=True)
+                # A tela terminava aqui, sem caminho de saida. Agora oferece o proximo passo.
+                st.info("Nenhuma coleta foi executada ainda nesta sessão.")
+                if st.button(
+                    "Ir para Execução Manual",
+                    type="primary",
+                    use_container_width=True,
+                    key="pm_status_goto_run",
+                ):
+                    st.session_state["pm_view"] = "run"
+                    st.rerun()
                 return
 
-            action_col1, action_col2, action_col3 = st.columns([1, 1, 2])
+            # As chaves viram classes st-key-* no container, e e por elas que o CSS
+            # pinta cada botao. O marcador invisivel anterior empurrava o botao
+            # para baixo e desalinhava a linha de acoes.
+            st.markdown(
+                f'<div class="pm-job-chip">Job atual <code>{_esc(job_id)}</code></div>',
+                unsafe_allow_html=True,
+            )
+            action_col1, action_col2 = st.columns(2)
             with action_col1:
-                refresh = st.button("Atualizar", use_container_width=True)
+                refresh = st.button(
+                    "Atualizar", use_container_width=True, key="pm_status_refresh"
+                )
             with action_col2:
-                stop = st.button("Parar execução", use_container_width=True)
-            with action_col3:
-                st.caption(f"Job atual: `{job_id}`")
+                stop = st.button(
+                    "Parar execução", use_container_width=True, key="pm_status_stop"
+                )
 
             if stop:
                 _request_json("POST", "/api/jobs/stop", timeout=8)
@@ -2588,15 +3095,16 @@ def _render_native_panel() -> None:
                 ok, _, status_payload, message = _request_json("GET", f"/api/status/{job_id}", timeout=8)
                 if not ok:
                     st.error(message or "Falha ao buscar status do job.")
-                    st.markdown("</div>", unsafe_allow_html=True)
-                    st.markdown("</div>", unsafe_allow_html=True)
                     return
 
                 if isinstance(status_payload, dict):
                     status_value = str(status_payload.get("status") or "").strip().upper() or "-"
-                    created_at = str(status_payload.get("created_at") or "").strip() or "-"
-                    started_at = str(status_payload.get("started_at") or "").strip() or "-"
-                    finished_at = str(status_payload.get("finished_at") or "").strip() or "-"
+                    # A API devolve epoch em float: sem formatar, a tela mostrava
+                    # "1756213448.1234". Agora sai como data e hora de Brasilia.
+                    created_at = _fmt_timestamp(status_payload.get("created_at"))
+                    started_at = _fmt_timestamp(status_payload.get("started_at"))
+                    finished_at = _fmt_timestamp(status_payload.get("finished_at"))
+                    job_duration = _fmt_duration(_job_duration_seconds(status_payload))
                     error_text = str(status_payload.get("error") or "").strip()
 
                     delivery = {
@@ -2651,10 +3159,11 @@ def _render_native_panel() -> None:
                         f'<div class="pm-info-grid" style="grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: 6px;">'
                         f'<div class="pm-card">'
                         f'<div class="pm-card-title">Status do job</div>'
-                        f'<div class="pm-kv"><span>Estado</span><span class="pm-badge {badge_class}">{_esc(status_value)}</span></div>'
+                        f'<div class="pm-kv"><span>Estado</span><span class="pm-badge {badge_class}">{_esc(_status_label(status_value))}</span></div>'
                         f'<div class="pm-kv"><span>Criado</span><span class="pm-mono">{_esc(created_at)}</span></div>'
                         f'<div class="pm-kv"><span>Iniciado</span><span class="pm-mono">{_esc(started_at)}</span></div>'
                         f'<div class="pm-kv"><span>Finalizado</span><span class="pm-mono">{_esc(finished_at)}</span></div>'
+                        f'<div class="pm-kv"><span>Duração</span><span class="pm-mono">{_esc(job_duration)}</span></div>'
                         f"</div>"
                         f'<div class="pm-card">'
                         f'<div class="pm-card-title">Entregas</div>'
@@ -2665,7 +3174,40 @@ def _render_native_panel() -> None:
                     st.markdown(status_html, unsafe_allow_html=True)
 
                     if error_text:
-                        st.error(error_text)
+                        lowered = error_text.lower()
+                        if "401" in lowered or "403" in lowered or "unauthor" in lowered or "credenc" in lowered:
+                            error_hint = (
+                                "A credencial do marketplace foi recusada. Renove o token em "
+                                "Configurações e execute a coleta novamente."
+                            )
+                        elif "timeout" in lowered or "timed out" in lowered or "conexão" in lowered or "connection" in lowered:
+                            error_hint = (
+                                "A coleta perdeu conexão com o site consultado. Costuma ser "
+                                "instabilidade momentânea — tente novamente em alguns minutos."
+                            )
+                        elif "coluna" in lowered or "column" in lowered or "planilha" in lowered:
+                            error_hint = (
+                                "A planilha de entrada não tem o formato esperado. Baixe a "
+                                "planilha modelo em Execução Manual e compare as colunas."
+                            )
+                        else:
+                            error_hint = (
+                                "Guarde a mensagem acima e tente novamente. Se repetir, "
+                                "verifique o Histórico de Jobs para ver se é uma falha recorrente."
+                            )
+                        st.markdown(
+                            f"""
+                            <div class="pm-error-card">
+                              <div class="pm-error-title">A coleta não foi concluída</div>
+                              <div class="pm-error-message">{_esc(error_text)}</div>
+                              <div class="pm-error-hint"><b>O que costuma resolver</b>{_esc(error_hint)}</div>
+                            </div>
+                            """,
+                            unsafe_allow_html=True,
+                        )
+                        if st.button("Tentar novamente", type="primary", use_container_width=True):
+                            st.session_state["pm_view"] = "run"
+                            st.rerun()
 
                 download_path = str(status_payload.get("download_url") or "").strip() if isinstance(status_payload, dict) else ""
                 if download_path:
@@ -2681,8 +3223,6 @@ def _render_native_panel() -> None:
                         )
                     elif dl_error:
                         st.caption(f"Download indisponível: {dl_error}")
-
-            st.markdown("</div>", unsafe_allow_html=True)
 
         else:
             st.session_state["pm_view"] = "overview"

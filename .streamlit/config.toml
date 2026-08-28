@@ -1,0 +1,20 @@
+# Tema do Busca Preco.
+#
+# Sem este arquivo o Streamlit usa o primaryColor padrao (#FF4B4B, vermelho) em
+# marcadores de radio, checkbox, foco e sliders - a mesma cor que o painel usa
+# para erro. Os valores abaixo sao os mesmos tokens --bp-* do CSS em
+# ui_streamlit/app.py, para que os widgets nativos combinem com o resto da tela.
+[theme]
+base = "dark"
+primaryColor = "#1472ff"
+backgroundColor = "#020713"
+secondaryBackgroundColor = "#061329"
+textColor = "#f5f7fb"
+
+[server]
+# A UI e servida atras do tunel; o watcher fica desligado como em run.ps1.
+fileWatcherType = "none"
+enableWebsocketCompression = false
+
+[browser]
+gatherUsageStats = false
