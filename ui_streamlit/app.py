@@ -195,6 +195,30 @@ def _render_iframe(url: str, *, height: int) -> None:
         components.iframe(url, height=height, scrolling=True)
 
 
+THEME_DARK = "escuro"
+THEME_LIGHT = "claro"
+THEMES = (THEME_DARK, THEME_LIGHT)
+
+
+def _current_theme() -> str:
+    """Tema ativo.
+
+    A escolha vai para a query string alem do session_state, para sobreviver a
+    um F5 e para poder ser compartilhada por link (?tema=claro).
+    """
+    from_query = str(st.query_params.get("tema", "")).strip().lower()
+    if from_query in THEMES:
+        st.session_state["pm_theme"] = from_query
+    theme = str(st.session_state.get("pm_theme") or THEME_DARK).strip().lower()
+    return theme if theme in THEMES else THEME_DARK
+
+
+def _set_theme(value: str) -> None:
+    value = value if value in THEMES else THEME_DARK
+    st.session_state["pm_theme"] = value
+    st.query_params["tema"] = value
+
+
 def _render_shell_css() -> None:
     st.markdown(
         """
@@ -1263,6 +1287,28 @@ def _render_shell_css() -> None:
         .pm-user-name { color: #fff; font-weight: 700; font-size: 0.87rem; }
         .pm-user-role { color: #2d7dff; font-size: 0.75rem; }
         .pm-version { color: #78859d; font-size: 0.69rem; padding: 6px 1px 0; }
+        .pm-theme-label {
+            color: #78859d;
+            font-size: .62rem;
+            font-weight: 700;
+            letter-spacing: .14em;
+            text-transform: uppercase;
+            padding: 10px 1px 2px;
+        }
+        /* O seletor de tema mora na barra lateral, que e estreita: o radio
+           precisa caber em uma linha e nao herdar o estilo dos itens de menu. */
+        div[data-testid="stColumn"]:has(.pm-sidebar-brand) [data-testid="stRadio"] > div {
+            gap: 10px !important;
+        }
+        div[data-testid="stColumn"]:has(.pm-sidebar-brand) [data-testid="stRadio"] label {
+            padding: 0 !important;
+            margin: 0 !important;
+        }
+        div[data-testid="stColumn"]:has(.pm-sidebar-brand) [data-testid="stRadio"] label p {
+            color: #c3ccdb !important;
+            font-size: .78rem !important;
+            font-weight: 600 !important;
+        }
         div[data-testid="stColumn"]:has(.pm-sidebar-brand) [data-testid="stButton"] button::before {
             width: 22px;
             flex: 0 0 22px;
@@ -1627,6 +1673,18 @@ def _render_shell_css() -> None:
             padding: 2px 7px;
             font-size: .76rem;
         }
+        /* As cores saem do estilo inline para uma classe: inline nao pode ser
+           sobreposto pela folha do tema claro. */
+        .pm-howto {
+            border: 1px solid var(--bp-border);
+            border-radius: 12px;
+            background: rgba(5, 18, 39, .72);
+            padding: 14px 16px;
+            margin: 6px 0 12px 0;
+        }
+        .pm-howto-title { margin: 0 0 8px 0; font-weight: 700; color: #ffffff; }
+        .pm-howto-body { margin: 0; color: #cfd8e8; line-height: 1.55; }
+        .pm-howto-body strong { color: #ffffff; }
         .pm-dashboard-footer { padding: 0 0 3px; color:#748198; font-size:.69rem; text-align:center; }
 
         /* Falha deixa de ser uma faixa vermelha com o texto cru do backend. */
@@ -1794,6 +1852,12 @@ def _render_shell_css() -> None:
             div[data-testid="stColumn"]:has(.pm-sidebar-brand) div[data-testid="stVerticalBlock"]:has(.pm-sidebar-brand) {
                 grid-template-columns: repeat(auto-fit, minmax(158px, 1fr)) !important;
             }
+            /* O seletor de tema nao e um destino de navegacao: ocupa a linha
+               inteira em vez de disputar uma celula com "Ajuda". */
+            div[data-testid="stColumn"]:has(.pm-sidebar-brand) div[data-testid="stElementContainer"]:has(.pm-theme-label),
+            div[data-testid="stColumn"]:has(.pm-sidebar-brand) div[data-testid="stElementContainer"]:has([data-testid="stRadio"]) {
+                grid-column: 1 / -1 !important;
+            }
             .pm-view-head { padding: 14px 16px; }
             .pm-view-title { font-size: 1.1rem; }
             .pm-dashboard-title { font-size: 1.24rem; }
@@ -1837,6 +1901,235 @@ def _render_shell_css() -> None:
                 min-height: 38px !important;
             }
         }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
+def _render_light_theme() -> None:
+    """Paleta clara.
+
+    Bloco de sobreposicao emitido depois do CSS base, so quando o tema claro
+    esta ativo. Preferi sobrepor a reescrever as regras escuras em tokens: o
+    tema escuro fica intocado e nao ha risco de regressao nele. O preco e que
+    uma cor nova precisa ser declarada nos dois lugares.
+    """
+    st.markdown(
+        """
+        <style>
+        /* ---------- Fundo e texto ---------- */
+        html, body, [data-testid="stAppViewContainer"] {
+            color: #0f1b2d !important;
+            background:
+              radial-gradient(circle at 72% -20%, rgba(20, 114, 255, 0.08), transparent 38%),
+              linear-gradient(180deg, #f4f6fb 0%, #eef2f9 100%) !important;
+        }
+
+        /* ---------- Barra lateral ---------- */
+        div[data-testid="stColumn"]:has(.pm-sidebar-brand) > div[data-testid="stVerticalBlock"] {
+            border-color: #dde4ef !important;
+            background: #ffffff !important;
+            box-shadow: 0 1px 3px rgba(15, 27, 45, .06) !important;
+        }
+        .pm-sidebar-brand { border-bottom-color: #e6ebf3 !important; }
+        .pm-sidebar-name { color: #0a1424 !important; }
+        .pm-sidebar-tagline { color: #5b6a82 !important; }
+        .pm-version { color: #8492a8 !important; }
+        .pm-theme-label { color: #5b6a82 !important; }
+        div[data-testid="stColumn"]:has(.pm-sidebar-brand) [data-testid="stButton"] button {
+            color: #1d2a3d !important;
+            background: transparent !important;
+        }
+        div[data-testid="stColumn"]:has(.pm-sidebar-brand) [data-testid="stButton"] button:hover {
+            background: rgba(20, 114, 255, .08) !important;
+            border-color: rgba(20, 114, 255, .24) !important;
+        }
+        div[data-testid="stColumn"]:has(.pm-sidebar-brand) [data-testid="stButton"] button[kind="primary"] {
+            color: #ffffff !important;
+        }
+        .pm-user-card { background: #f6f8fc !important; border-color: #dde4ef !important; }
+        .pm-user-name { color: #0a1424 !important; }
+        div[data-testid="stColumn"]:has(.pm-sidebar-brand) [data-testid="stRadio"] label p {
+            color: #1d2a3d !important;
+        }
+
+        /* ---------- Cabecalho da tela ---------- */
+        .pm-dashboard-header {
+            border-color: #dde4ef !important;
+            background: #ffffff !important;
+            box-shadow: 0 1px 3px rgba(15, 27, 45, .06) !important;
+        }
+        .pm-dashboard-title { color: #0a1424 !important; }
+        .pm-dashboard-subtitle { color: #5b6a82 !important; }
+        .pm-header-meta { color: #46536a !important; border-left-color: #e3e9f2 !important; }
+        .pm-header-bell { color: #46536a !important; }
+        .pm-header-line b { color: #1472ff !important; }
+
+        /* ---------- Cartao de contexto ---------- */
+        .pm-context-card {
+            border-color: #dde4ef !important;
+            background: linear-gradient(105deg, #ffffff, #f7faff) !important;
+            box-shadow: 0 1px 3px rgba(15, 27, 45, .06) !important;
+        }
+        .pm-context-label { color: #0b57d0 !important; }
+        .pm-context-name { color: #0a1424 !important; }
+        .pm-context-description { color: #5b6a82 !important; }
+
+        /* ---------- Cartoes, metricas e secoes ---------- */
+        .pm-reference-card,
+        .pm-system-overview,
+        .pm-download-card,
+        .pm-view-head {
+            border-color: #dde4ef !important;
+            background: #ffffff !important;
+            box-shadow: 0 1px 3px rgba(15, 27, 45, .06) !important;
+        }
+        .pm-reference-icon { background: rgba(20, 114, 255, .10) !important; box-shadow: none !important; }
+        .pm-reference-title, .pm-section-title, .pm-view-title { color: #0a1424 !important; }
+        .pm-reference-subtitle, .pm-reference-note, .pm-view-note { color: #5b6a82 !important; }
+        .pm-reference-row {
+            border-color: #e6ebf3 !important;
+            background: #f6f8fc !important;
+        }
+        .pm-reference-row-main { color: #12203a !important; }
+        .pm-reference-row-main small { color: #6b7a92 !important; }
+        .pm-reference-link { color: #0b57d0 !important; }
+        .pm-metric { border-left-color: #e3e9f2 !important; }
+        .pm-metric-label { color: #5b6a82 !important; }
+        .pm-metric-value { color: #0a1424 !important; }
+        .pm-metric-value small { color: #7a879c !important; }
+        .pm-metric-note { color: #6b7a92 !important; }
+        .pm-download-description { color: #5b6a82 !important; }
+        .pm-dashboard-footer { color: #8492a8 !important; }
+        .pm-view-kicker { color: #0b57d0 !important; }
+        .pm-job-chip {
+            border-color: #dde4ef !important;
+            background: #ffffff !important;
+            color: #5b6a82 !important;
+        }
+        .pm-job-chip code { color: #0b57d0 !important; background: rgba(20, 114, 255, .10) !important; }
+        .pm-howto { border-color: #dde4ef !important; background: #f6f8fc !important; }
+        .pm-howto-title, .pm-howto-body strong { color: #0a1424 !important; }
+        .pm-howto-body { color: #3a4a63 !important; }
+
+        /* ---------- Estados ---------- */
+        /* No branco o verde e o ambar precisam escurecer para manter contraste. */
+        .pm-reference-status { border-color: #dde4ef !important; background: #f2f5fa !important; color: #46536a !important; }
+        .pm-reference-status.ok { border-color: rgba(10, 143, 77, .28) !important; background: rgba(10, 143, 77, .10) !important; color: #0a8f4d !important; }
+        .pm-reference-status.warn { border-color: rgba(178, 107, 0, .28) !important; background: rgba(178, 107, 0, .10) !important; color: #b26b00 !important; }
+        .pm-reference-status.bad { border-color: rgba(211, 32, 54, .28) !important; background: rgba(211, 32, 54, .09) !important; color: #d32036 !important; }
+        .pm-metric-note.good { color: #0a8f4d !important; }
+        .pm-metric-note.warn { color: #b26b00 !important; }
+        .pm-metric-note.bad, .pm-metric-value.bad { color: #d32036 !important; }
+        .pm-reference-note.ok::before { color: #0a8f4d !important; }
+        .pm-context-icon.ok { background: #0a8f4d !important; color: #ffffff !important; box-shadow: none !important; }
+        .pm-context-icon.warn { background: #b26b00 !important; color: #ffffff !important; box-shadow: none !important; }
+        .pm-context-icon.bad { background: #d32036 !important; color: #ffffff !important; box-shadow: none !important; }
+        .pm-header-bell.has-alert::after { background: #b26b00 !important; color: #ffffff !important; box-shadow: none !important; }
+
+        /* ---------- Cartoes do Status (familia pm-card / pm-kv / pm-badge) ---------- */
+        .pm-glass, .pm-panel, .pm-card {
+            background: #ffffff !important;
+            border-color: #dde4ef !important;
+            box-shadow: 0 1px 3px rgba(15, 27, 45, .06) !important;
+        }
+        .pm-glass::before, .pm-card::after { display: none !important; }
+        .pm-card-title, .pm-kicker { color: #0a1424 !important; }
+        .pm-kv {
+            background: #f6f8fc !important;
+            border-color: #e6ebf3 !important;
+        }
+        .pm-kv span:first-child { color: #5b6a82 !important; }
+        .pm-mono { color: #12203a !important; }
+        .pm-badge {
+            background: #f2f5fa !important;
+            border-color: #dde4ef !important;
+            color: #46536a !important;
+        }
+        .pm-badge-ok { background: rgba(10, 143, 77, .10) !important; border-color: rgba(10, 143, 77, .28) !important; color: #0a8f4d !important; }
+        .pm-badge-warn { background: rgba(178, 107, 0, .10) !important; border-color: rgba(178, 107, 0, .28) !important; color: #b26b00 !important; }
+        .pm-badge-bad { background: rgba(211, 32, 54, .09) !important; border-color: rgba(211, 32, 54, .28) !important; color: #d32036 !important; }
+        .pm-badge-info { background: rgba(20, 114, 255, .10) !important; border-color: rgba(20, 114, 255, .28) !important; color: #0b57d0 !important; }
+
+        /* ---------- Bloco de erro ---------- */
+        .pm-error-card {
+            border-color: rgba(211, 32, 54, .30) !important;
+            background: linear-gradient(105deg, #fff5f6, #ffffff 62%) !important;
+        }
+        .pm-error-title { color: #0a1424 !important; }
+        .pm-error-message { color: #8a3540 !important; }
+        .pm-error-hint { border-color: rgba(211, 32, 54, .18) !important; background: #ffffff !important; color: #12203a !important; }
+        .pm-error-hint b { color: #6b7a92 !important; }
+        .pm-error-detail { color: #6b7a92 !important; }
+
+        /* ---------- Widgets do Streamlit ---------- */
+        div[data-testid="stColumn"]:has(.pm-main-marker) [data-testid="stButton"] button,
+        div[data-testid="stColumn"]:has(.pm-main-marker) [data-testid="stFormSubmitButton"] button,
+        div[data-testid="stColumn"]:has(.pm-main-marker) [data-testid="stDownloadButton"] button[kind="secondary"] {
+            border-color: #dde4ef !important;
+            background: #ffffff !important;
+            color: #1d2a3d !important;
+        }
+        div[data-testid="stColumn"]:has(.pm-main-marker) [data-testid="stButton"] button:hover:not(:disabled),
+        div[data-testid="stColumn"]:has(.pm-main-marker) [data-testid="stDownloadButton"] button[kind="secondary"]:hover {
+            background: rgba(20, 114, 255, .08) !important;
+            border-color: rgba(20, 114, 255, .35) !important;
+            color: #0a1424 !important;
+        }
+        div[data-testid="stColumn"]:has(.pm-main-marker) [data-testid="stButton"] button:disabled {
+            background: #f2f5fa !important;
+            border-color: #e6ebf3 !important;
+            color: #9aa6bb !important;
+        }
+        div[data-testid="stColumn"]:has(.pm-main-marker) [data-testid="stButton"] button[kind="primary"],
+        div[data-testid="stColumn"]:has(.pm-main-marker) [data-testid="stDownloadButton"] button[kind="primary"] {
+            color: #ffffff !important;
+        }
+        div[data-testid="stColumn"]:has(.pm-main-marker) .st-key-pm_status_stop [data-testid="stButton"] button {
+            background: rgba(211, 32, 54, .08) !important;
+            border-color: rgba(211, 32, 54, .38) !important;
+            color: #c01a2e !important;
+        }
+        div[data-testid="stColumn"]:has(.pm-main-marker) [data-testid="stWidgetLabel"] p,
+        div[data-testid="stColumn"]:has(.pm-main-marker) [data-testid="stWidgetLabel"] label,
+        div[data-testid="stColumn"]:has(.pm-main-marker) [data-testid="stRadio"] label p,
+        div[data-testid="stColumn"]:has(.pm-main-marker) [data-testid="stCheckbox"] label p {
+            color: #12203a !important;
+        }
+        div[data-testid="stColumn"]:has(.pm-main-marker) [data-testid="stCaptionContainer"] p {
+            color: #5b6a82 !important;
+        }
+        /* O config.toml fixa base="dark", entao o BaseWeb desenha o radio nao
+           marcado como um circulo escuro cheio - no branco ele parece marcado.
+           O anel e o ponto sao redesenhados aqui. */
+        label[data-baseweb="radio"] > div:first-child {
+            background-color: #ffffff !important;
+            box-shadow: inset 0 0 0 1.5px #b6c2d6 !important;
+        }
+        label[data-baseweb="radio"] > div:first-child > div {
+            background-color: transparent !important;
+        }
+        label[data-baseweb="radio"]:has(input:checked) > div:first-child {
+            background-color: #1472ff !important;
+            box-shadow: none !important;
+        }
+        label[data-baseweb="radio"]:has(input:checked) > div:first-child > div {
+            background-color: #ffffff !important;
+        }
+        div[data-testid="stColumn"]:has(.pm-main-marker) h1,
+        div[data-testid="stColumn"]:has(.pm-main-marker) h2,
+        div[data-testid="stColumn"]:has(.pm-main-marker) h3,
+        div[data-testid="stColumn"]:has(.pm-main-marker) p,
+        div[data-testid="stColumn"]:has(.pm-main-marker) li {
+            color: #12203a;
+        }
+        div[data-testid="stColumn"]:has(.pm-main-marker) [data-testid="stFileUploaderDropzone"] {
+            background: #f6f8fc !important;
+            border-color: #dde4ef !important;
+        }
+        [data-testid="stAlertContainer"] { color: #12203a !important; }
+        code { color: #0b57d0 !important; background: rgba(20, 114, 255, .10) !important; }
         </style>
         """,
         unsafe_allow_html=True,
@@ -2549,6 +2842,21 @@ def _render_native_panel() -> None:
                 unsafe_allow_html=True,
             )
 
+        active_theme = _current_theme()
+        st.markdown('<div class="pm-theme-label">Tema</div>', unsafe_allow_html=True)
+        theme_choice = st.radio(
+            "Tema",
+            options=list(THEMES),
+            index=THEMES.index(active_theme),
+            horizontal=True,
+            label_visibility="collapsed",
+            format_func=lambda value: "Escuro" if value == THEME_DARK else "Claro",
+            key="pm_theme_choice",
+        )
+        if theme_choice != active_theme:
+            _set_theme(theme_choice)
+            st.rerun()
+
         st.markdown(
             '<div class="pm-version">Versão 1.0.0</div>',
             unsafe_allow_html=True,
@@ -2880,14 +3188,14 @@ def _render_native_panel() -> None:
 
             st.markdown(
                 """
-                <div style="border:1px solid var(--bp-border);border-radius:12px;background:rgba(5,18,39,.72);padding:14px 16px;margin:6px 0 12px 0;">
-                  <p style="margin:0 0 8px 0;font-weight:700;color:#ffffff;">Manual rápido (como executar e baixar resultados)</p>
-                  <p style="margin:0;color:#cfd8e8;line-height:1.55;">
+                <div class="pm-howto">
+                  <p class="pm-howto-title">Manual rápido (como executar e baixar resultados)</p>
+                  <p class="pm-howto-body">
                     1. Escolha a base: a cadastrada no servidor ou uma planilha sua.<br/>
                     2. Para usar a sua, baixe a planilha modelo, preencha e faça o upload.<br/>
-                    3. Clique em <strong style="color:#ffffff;">Iniciar coleta</strong>.<br/>
-                    4. Acompanhe em <strong style="color:#ffffff;">Status</strong>.<br/>
-                    5. Ao concluir, clique em <strong style="color:#ffffff;">Baixar resultado</strong>.
+                    3. Clique em <strong>Iniciar coleta</strong>.<br/>
+                    4. Acompanhe em <strong>Status</strong>.<br/>
+                    5. Ao concluir, clique em <strong>Baixar resultado</strong>.
                   </p>
                 </div>
                 """,
@@ -3231,6 +3539,9 @@ def _render_native_panel() -> None:
 _install_dom_integrity_guard()
 _require_login()
 _render_shell_css()
+if _current_theme() == THEME_LIGHT:
+    # Precisa vir depois do CSS base para sobrepor as cores escuras.
+    _render_light_theme()
 
 api_ok, api_error = _validate_api_base()
 if not api_ok:
