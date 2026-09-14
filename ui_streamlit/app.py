@@ -15,6 +15,8 @@ import requests
 import streamlit as st
 import streamlit.components.v1 as components
 
+from integrations.brasilapi_panel import render as render_public_data
+
 API_BASE = (
     os.getenv("UI_API_BASE")
     or os.getenv("API_BASE", "http://127.0.0.1:8000")
@@ -2815,6 +2817,7 @@ def _render_native_panel() -> None:
         _nav_button("◉  Status", "status")
         _nav_button("◷  Histórico de Jobs", "history")
         _nav_button("⇩  Downloads", "downloads")
+        _nav_button("▦  Central de Dados", "public_data")
         _nav_button("⚙  Configurações", "settings")
         _nav_button("?  Ajuda", "help")
 
@@ -2872,6 +2875,7 @@ def _render_native_panel() -> None:
             "status": ("Painel / Status", "Acompanhe o processamento em tempo real"),
             "history": ("Painel / Histórico de Jobs", "Consulte as execuções mais recentes"),
             "downloads": ("Painel / Downloads", "Baixe os resultados processados"),
+            "public_data": ("Painel / Central de Dados Públicos", "Consulte CEP, CNPJ, CPF e outras bases oficiais"),
             "settings": ("Painel / Configurações", "Preferências e integrações do sistema"),
             "help": ("Painel / Ajuda", "Orientações para utilizar o Busca Preço"),
         }
@@ -3329,6 +3333,14 @@ def _render_native_panel() -> None:
             else:
                 st.button("⇩  Baixar última diária (.xlsx)", disabled=True, use_container_width=True)
                 st.caption(error or "Arquivo diário indisponível no momento.")
+
+        elif view == "public_data":
+            _section_head(
+                "Central de Dados Públicos",
+                "Consultas oficiais",
+                "Escolha uma categoria e consulte CEP, CNPJ, CPF e outras bases públicas sem sair do painel.",
+            )
+            render_public_data()
 
         elif view == "settings":
             st.markdown(
