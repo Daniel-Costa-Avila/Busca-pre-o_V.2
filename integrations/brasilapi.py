@@ -32,14 +32,6 @@ def endpoint(resource: str, value: str = "") -> str:
         if not re.fullmatch(r"[1-9][0-9]", value):
             raise BrasilAPIError("Informe um DDD brasileiro com 2 dígitos.")
         return f"ddd/v2/{value}"
-    if resource == "moedas":
-        if value:
-            raise BrasilAPIError("A consulta de moedas não recebe parâmetros.")
-        return "cambio/v1/moedas"
-    if resource == "taxas":
-        if value and not re.fullmatch(r"[A-Z]{2,12}", value):
-            raise BrasilAPIError("Informe somente letras para a sigla da taxa ou deixe vazio para listar todas.")
-        return "taxas/v1" + (f"/{value}" if value else "")
     if resource == "ncm":
         value = re.sub(r"[.\-\s]", "", value)
         if not re.fullmatch(r"[0-9]{8}", value):
@@ -54,14 +46,6 @@ def endpoint(resource: str, value: str = "") -> str:
         if value:
             raise BrasilAPIError("A consulta da versão IBPT não recebe parâmetros.")
         return "ibpt/versao/v1"
-    if resource == "banks":
-        if value and not re.fullmatch(r"[0-9]{1,3}", value):
-            raise BrasilAPIError("Informe até 3 dígitos para o banco ou deixe vazio para listar todos.")
-        return "banks/v1" + (f"/{int(value)}" if value else "")
-    if resource == "feriados":
-        if not re.fullmatch(r"[0-9]{4}", value) or not 1900 <= int(value) <= 2199:
-            raise BrasilAPIError("Informe um ano entre 1900 e 2199.")
-        return f"feriados/v1/{value}"
     if resource == "municipios":
         if value not in UFS:
             raise BrasilAPIError("Selecione uma UF válida.")
@@ -87,7 +71,7 @@ def consultar(resource: str, value: str = "") -> dict | list:
         if response.status_code != 200:
             raise BrasilAPIError("BrasilAPI indisponível no momento. Tente novamente mais tarde.")
         payload = response.json()
-        expected = list if resource in {"feriados", "municipios", "ddd", "moedas"} or (resource in {"banks", "taxas"} and not str(value).strip()) else dict
+        expected = list if resource in {"municipios", "ddd"} else dict
         if not isinstance(payload, expected) or (isinstance(payload, list) and any(not isinstance(row, dict) for row in payload)):
             raise BrasilAPIError("A BrasilAPI retornou um formato inesperado.")
         return payload

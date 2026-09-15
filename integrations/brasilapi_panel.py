@@ -1,28 +1,22 @@
 """Tela reutilizável na interface Streamlit: Central de Dados Públicos."""
 import json
-from datetime import datetime
 
 import streamlit as st
 
 from integrations.brasilapi import BrasilAPIError, UFS, consultar, endpoint
 
-# As 12 consultas ficavam soltas em um único combo, obrigando o operador a ler
-# o rótulo inteiro pra achar o que precisava. Agrupadas por finalidade, cada
-# aba mostra só as opções daquele assunto.
+# As consultas ficam agrupadas por finalidade, para o operador encontrar o que
+# precisa sem percorrer uma lista longa.
 CATEGORIES = {
     "⌖  Endereço e Localização": {"CEP": "cep", "Municípios": "municipios", "DDD": "ddd"},
     "◈  Empresas e Pessoas": {"CNPJ": "cnpj", "CPF": "cpf"},
     "▤  Fiscal e Comércio": {"NCM": "ncm", "CNAE": "cnae", "Versão IBPT": "ibpt_versao"},
-    "¤  Financeiro": {"Moedas": "moedas", "Taxas e índices": "taxas", "Bancos": "banks"},
-    "▣  Institucional": {"Feriados nacionais": "feriados"},
 }
 FIELD_LABELS = {
-    "banks": "Código do banco (vazio para listar todos)",
-    "taxas": "Sigla da taxa (vazio para listar todas)",
     "ncm": "Código NCM", "cnae": "Classe CNAE", "ddd": "DDD",
 }
-NO_VALUE_RESOURCES = {"moedas", "ibpt_versao"}
-RESULT_FIELDS = {"cep": "CEP", "street": "Logradouro", "neighborhood": "Bairro", "city": "Cidade", "state": "UF", "razao_social": "Razão social", "nome_fantasia": "Nome fantasia", "cnpj": "CNPJ", "cpf": "CPF", "isValid": "CPF válido", "rf": "Região fiscal", "ufs": "UFs", "descricao_situacao_cadastral": "Situação cadastral", "municipio": "Município", "uf": "UF", "name": "Nome", "fullName": "Nome completo", "code": "Código", "ispb": "ISPB", "codigo": "Código", "descricao": "Descrição", "nome": "Nome", "valor": "Valor", "versao": "Versão IBPT", "cities": "Cidades", "simbolo": "Símbolo", "tipo_moeda": "Tipo de moeda", "id": "Código CNAE"}
+NO_VALUE_RESOURCES = {"ibpt_versao"}
+RESULT_FIELDS = {"cep": "CEP", "street": "Logradouro", "neighborhood": "Bairro", "city": "Cidade", "state": "UF", "razao_social": "Razão social", "nome_fantasia": "Nome fantasia", "cnpj": "CNPJ", "cpf": "CPF", "isValid": "CPF válido", "rf": "Região fiscal", "ufs": "UFs", "descricao_situacao_cadastral": "Situação cadastral", "municipio": "Município", "uf": "UF", "codigo": "Código", "descricao": "Descrição", "versao": "Versão IBPT", "cities": "Cidades", "id": "Código CNAE"}
 
 
 @st.cache_data(ttl=3600, max_entries=256, show_spinner=False)
@@ -45,8 +39,6 @@ def _render_result(resource: str) -> None:
         rows = [{"Campo": title, "Valor": str(payload[key])} for key, title in RESULT_FIELDS.items() if payload.get(key) is not None]
         if rows:
             st.dataframe(rows, use_container_width=True, hide_index=True)
-        with st.expander("Dados completos"):
-            st.json(payload)
     st.download_button("Baixar dados (JSON)", json.dumps(payload, ensure_ascii=False, indent=2), file_name=f"brasilapi-{resource}.json", mime="application/json", key=f"brasilapi_download_{resource}")
 
 
@@ -56,8 +48,6 @@ def _render_category(category: str, options: dict) -> None:
     with st.form(f"brasilapi_{resource}"):
         if resource == "municipios":
             value = st.selectbox("Estado (UF)", UFS, index=UFS.index("SP"))
-        elif resource == "feriados":
-            value = str(st.number_input("Ano", min_value=1900, max_value=2199, value=datetime.now().year, step=1))
         elif resource in NO_VALUE_RESOURCES:
             value = ""
             st.caption("Consulta sem parâmetros.")
@@ -69,7 +59,7 @@ def _render_category(category: str, options: dict) -> None:
         st.session_state.pop("brasilapi_result", None)
         try:
             path = endpoint(resource, value)
-            normalized = path.rsplit("/", 1)[-1] if path != "banks/v1" else ""
+            normalized = path.rsplit("/", 1)[-1]
             with st.spinner("Consultando BrasilAPI..."):
                 payload = consultar(resource, normalized) if resource == "cpf" else _consulta(resource, normalized)
             st.session_state["brasilapi_result"] = (resource, value, payload)
