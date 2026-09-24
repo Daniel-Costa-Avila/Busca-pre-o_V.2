@@ -15,7 +15,7 @@ import time
 import unicodedata
 import requests
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from email.message import EmailMessage
 from pathlib import Path
 from queue import Queue
@@ -23,7 +23,7 @@ from threading import Lock, Thread
 from typing import Any
 from urllib.parse import urlencode
 
-from fastapi import FastAPI, File, Form, Request, UploadFile
+from fastapi import FastAPI, File, Form, Query, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, FileResponse, JSONResponse, RedirectResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
@@ -33,6 +33,7 @@ from pydantic import BaseModel, Field
 
 from App.config import get_server_settings
 from App.workbook_style import style_result_workbook
+from ui import result_store
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 RUNS_DIR = BASE_DIR / "runs"
@@ -53,6 +54,7 @@ DRIVE_SETTINGS_FILE = RUNS_DIR / "drive_settings.json"
 DAILY_SCHEDULE_SETTINGS_FILE = RUNS_DIR / "daily_schedule_settings.json"
 PRECOS_IMPORT_LOG_FILE = RUNS_DIR / "precos_importacoes.log"
 ML_TASKS_FILE = RUNS_DIR / "ml_tasks.json"
+RESULTS_DB_FILE = BASE_DIR / "data" / "resultados.sqlite3"
 
 ADMIN_SESSION_HEADER = "x-user-session"
 ONLY_ONE_JOB_MESSAGE = "Ja existe uma busca em andamento. Aguarde finalizar para iniciar outra."
@@ -1807,6 +1809,14 @@ def _worker() -> None:
         try:
             _run_job(job)
             job.status = "DONE"
+            job.finished_at = _now_ts()
+            result_store.import_workbook(
+                RESULTS_DB_FILE,
+                job_id=job.job_id,
+                source=str(job.trigger or "MANUAL").upper(),
+                output_path=job.output_path,
+                finished_at=datetime.fromtimestamp(job.finished_at, timezone.utc),
+            )
             _archive_result_by_origin(job)
         except JobStoppedError as exc:
             job.status = "STOPPED"
@@ -1815,7 +1825,8 @@ def _worker() -> None:
             job.status = "FAILED"
             job.error = f"{type(exc).__name__}: {exc}"
         finally:
-            job.finished_at = _now_ts()
+            if job.finished_at is None:
+                job.finished_at = _now_ts()
             if job.status == "DONE" and job.auto_email_enabled:
                 job.email_status, job.email_error = _send_output_email(job)
                 if job.email_status == "SENT":
@@ -2306,6 +2317,8 @@ def _extract_ml_entries_and_strip_rows(path: Path) -> tuple[list[str], int, int]
 @app.on_event("startup")
 def startup() -> None:
     RUNS_DIR.mkdir(exist_ok=True)
+    result_store.initialize(RESULTS_DB_FILE)
+    result_store.purge_expired(RESULTS_DB_FILE)
     _load_email_settings()
     _load_whatsapp_settings()
     _load_drive_settings()
@@ -2337,6 +2350,56 @@ def api_overview():
             "latest_output_job": _job_payload(_latest_output_job()),
         }
     )
+
+
+@app.get("/api/resultados/ultimos")
+def api_resultados_ultimos(
+    dias: int = Query(default=7, ge=1, le=7),
+    canal: str | None = None,
+    codigo_interno: str | None = None,
+    id_no_canal: str | None = None,
+    busca: str | None = None,
+    pagina: int = Query(default=1, ge=1),
+    tamanho_pagina: int = Query(default=100, ge=1, le=500),
+):
+    """Resultados dos ultimos sete dias, com filtros e paginacao."""
+    total, items = result_store.query_items(
+        RESULTS_DB_FILE,
+        days=dias,
+        channel=canal,
+        internal_code=codigo_interno,
+        channel_id=id_no_canal,
+        query=busca,
+        page=pagina,
+        page_size=tamanho_pagina,
+    )
+    return JSONResponse(
+        {
+            "dias": dias,
+            "total": total,
+            "pagina": pagina,
+            "tamanho_pagina": tamanho_pagina,
+            "itens": items,
+        }
+    )
+
+
+@app.get("/api/resultados/ultima-coleta")
+def api_resultados_ultima_coleta():
+    collection = result_store.latest_collection(RESULTS_DB_FILE)
+    if collection is None:
+        return JSONResponse({"error": "Nenhum resultado armazenado ainda."}, status_code=404)
+    return JSONResponse(collection)
+
+
+@app.get("/api/resultados/coletas")
+def api_resultados_coletas(dias: int = Query(default=7, ge=1, le=7)):
+    return JSONResponse({"dias": dias, "coletas": result_store.list_collections(RESULTS_DB_FILE, dias)})
+
+
+@app.get("/api/resultados/resumo")
+def api_resultados_resumo(dias: int = Query(default=7, ge=1, le=7)):
+    return JSONResponse(result_store.summary(RESULTS_DB_FILE, dias))
 
 
 @app.post("/api/precos/importar")

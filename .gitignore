@@ -8,6 +8,7 @@ __pycache__/
 
 # Runtime outputs and logs
 runs/
+data/
 debug_magalu/
 App/logs/
 run_status.txt
