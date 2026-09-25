@@ -1566,7 +1566,8 @@ def _render_shell_css() -> None:
             border-color: rgba(148, 163, 184, .18) !important;
             color: #6f7c93 !important;
         }
-        div[data-testid="stColumn"]:has(.pm-main-marker) [data-testid="stButton"] button[kind="primary"] {
+        div[data-testid="stColumn"]:has(.pm-main-marker) [data-testid="stButton"] button[kind="primary"],
+        div[data-testid="stColumn"]:has(.pm-main-marker) [data-testid="stFormSubmitButton"] button[kind="primaryFormSubmit"] {
             background: linear-gradient(180deg, #1472ff 0%, #0750db 100%) !important;
             border-color: #1c75ff !important;
             color: #ffffff !important;
@@ -2085,6 +2086,7 @@ def _render_light_theme() -> None:
             color: #9aa6bb !important;
         }
         div[data-testid="stColumn"]:has(.pm-main-marker) [data-testid="stButton"] button[kind="primary"],
+        div[data-testid="stColumn"]:has(.pm-main-marker) [data-testid="stFormSubmitButton"] button[kind="primaryFormSubmit"],
         div[data-testid="stColumn"]:has(.pm-main-marker) [data-testid="stDownloadButton"] button[kind="primary"] {
             color: #ffffff !important;
         }
@@ -2129,6 +2131,20 @@ def _render_light_theme() -> None:
         div[data-testid="stColumn"]:has(.pm-main-marker) [data-testid="stFileUploaderDropzone"] {
             background: #f6f8fc !important;
             border-color: #dde4ef !important;
+        }
+        /* Campos de formulario (texto, selectbox, numero) herdavam o fundo
+           escuro do tema base e ficavam como "ilhas" pretas no tema claro. */
+        div[data-testid="stColumn"]:has(.pm-main-marker) [data-testid="stTextInput"] input,
+        div[data-testid="stColumn"]:has(.pm-main-marker) [data-testid="stSelectbox"] div,
+        div[data-testid="stColumn"]:has(.pm-main-marker) [data-testid="stNumberInput"] input {
+            background: #f6f8fc !important;
+            border-color: #dde4ef !important;
+            color: #12203a !important;
+        }
+        div[data-testid="stColumn"]:has(.pm-main-marker) [data-testid="stForm"] {
+            background: #ffffff !important;
+            border-color: #dde4ef !important;
+            box-shadow: 0 1px 3px rgba(15, 27, 45, .06) !important;
         }
         [data-testid="stAlertContainer"] { color: #12203a !important; }
         code { color: #0b57d0 !important; background: rgba(20, 114, 255, .10) !important; }
